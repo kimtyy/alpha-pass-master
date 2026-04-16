@@ -35,174 +35,153 @@ export default function StudyPage() {
   const isCorrect = selected === MOCK_QUESTION.answer;
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center pb-12 overflow-x-hidden">
-      {/* Top Navigation */}
-      <header className="w-full max-w-2xl px-6 py-8 flex justify-between items-center bg-transparent z-50">
-        <Link href="/dashboard" className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
-          <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+    <div className="h-[100dvh] bg-[#060608] text-white flex flex-col items-center overflow-hidden">
+      {/* Top Navigation - Slightly more compact */}
+      <header className="w-full max-w-2xl px-6 py-4 flex justify-between items-center bg-transparent z-50 shrink-0">
+        <Link href="/dashboard" className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
+          <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
         </Link>
         <div className="flex flex-col items-center">
-          <span className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">Session Active</span>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <h2 className="text-sm font-bold truncate max-w-[150px]">{MOCK_QUESTION.subject.split('|')[1]}</h2>
+          <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] mb-0.5 opacity-70">Focus Mode</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            <h2 className="text-xs font-bold truncate max-w-[120px]">{MOCK_QUESTION.subject.split('|')[1]}</h2>
           </div>
         </div>
-        <button className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-          <MoreVertical size={20} />
+        <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all opacity-50">
+          <MoreVertical size={18} />
         </button>
       </header>
 
-      {/* Progress Indicator */}
-      <div className="w-full max-w-sm px-6 mb-12">
-        <div className="flex justify-between text-[10px] font-black text-gray-600 uppercase mb-2">
+      {/* Progress Indicator - Compact */}
+      <div className="w-full max-w-sm px-6 mb-4 shrink-0">
+        <div className="flex justify-between text-[9px] font-black text-gray-600 uppercase mb-1.5 px-1">
           <span>Target Score: 80%</span>
           <span>Question 1 / 10</span>
         </div>
-        <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: '10%' }}
-            className="h-full bg-primary"
+            className="h-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.5)]"
           />
         </div>
       </div>
 
-      {/* Main Focus Card */}
-      <main className="w-full max-w-2xl px-6">
+      {/* Main Focus Area - Flexible height */}
+      <main className="flex-1 w-full max-w-2xl px-4 pb-6 flex flex-col overflow-hidden">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative bg-white/5 border border-white/10 rounded-[40px] p-8 md:p-12 backdrop-blur-3xl shadow-2xl overflow-hidden"
+          className="flex-1 flex flex-col relative bg-white/5 border border-white/10 rounded-[32px] md:rounded-[40px] p-6 md:p-10 backdrop-blur-3xl shadow-2xl overflow-hidden"
         >
           {/* Subtle Glows */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -z-10" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 blur-[100px] -z-10" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[80px] -z-10" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/5 blur-[80px] -z-10" />
 
-          <div className="flex items-center gap-3 mb-8">
-            <span className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
-              <Brain size={20} />
-            </span>
-            <span className="text-xs font-bold text-gray-400">AI 역공학 핵심 기출</span>
+          {/* Question Section - Scrollable if text is huge, but usually fits */}
+          <div className="mb-6 shrink-0">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
+                <Brain size={16} />
+              </span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">AI 역공학 핵심 기출</span>
+            </div>
+            <h1 className="text-xl md:text-2xl font-bold leading-tight line-clamp-4">
+              {MOCK_QUESTION.question}
+            </h1>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold leading-snug mb-12">
-            {MOCK_QUESTION.question}
-          </h1>
-
-          <div className="space-y-4">
+          {/* Options Section - Scrollable within card */}
+          <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
             {MOCK_QUESTION.options.map((option, idx) => (
               <motion.button
                 key={idx}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelect(idx)}
-                className={`w-full text-left p-6 rounded-3xl border-2 transition-all duration-300 relative group overflow-hidden ${
+                className={`w-full text-left p-4 md:p-5 rounded-2xl md:rounded-3xl border-2 transition-all duration-300 relative group overflow-hidden ${
                   selected === idx 
-                    ? 'bg-primary/20 border-primary shadow-[0_0_30px_rgba(139,92,246,0.3)]' 
+                    ? 'bg-primary/20 border-primary shadow-[0_0_20px_rgba(139,92,246,0.2)]' 
                     : 'bg-white/5 border-white/5 hover:border-white/20'
                 } ${showResult && idx === MOCK_QUESTION.answer ? 'border-accent/50 bg-accent/10' : ''} 
                   ${showResult && selected === idx && idx !== MOCK_QUESTION.answer ? 'border-red-500/50 bg-red-500/10' : ''}`}
               >
-                <div className="flex items-center gap-5 relative z-10">
-                  <span className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black border-2 transition-colors ${
+                <div className="flex items-center gap-4 relative z-10">
+                  <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-black border-2 transition-colors ${
                     selected === idx ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-gray-500'
                   }`}>
                     {String.fromCharCode(65 + idx)}
                   </span>
-                  <span className={`text-lg transition-colors font-medium ${selected === idx ? 'text-white' : 'text-gray-400 group-hover:text-gray-200'}`}>
+                  <span className={`text-base transition-colors font-medium leading-tight ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
                     {option}
                   </span>
                 </div>
-                {selected === idx && !showResult && (
-                  <motion.div 
-                    layoutId="active-bg"
-                    className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent -z-10" 
-                  />
-                )}
               </motion.button>
             ))}
-          </div>
 
-          {/* Result Area */}
-          <AnimatePresence>
-            {showResult && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                className="mt-12 p-8 rounded-[32px] bg-white/5 border border-white/10 relative overflow-hidden"
-              >
-                <div className={`flex items-center gap-3 mb-4 ${isCorrect ? 'text-accent' : 'text-red-400'}`}>
-                  {isCorrect ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-                  <span className="text-xl font-black uppercase italic tracking-tighter">
-                    {isCorrect ? 'Perfect Point!' : 'Diagnostic Alert'}
-                  </span>
-                </div>
-                
-                <p className="text-gray-300 leading-relaxed font-medium">
-                  {isCorrect ? MOCK_QUESTION.diagnostic.correct : MOCK_QUESTION.diagnostic.incorrect}
-                </p>
-
-                <div className="mt-8 pt-8 border-t border-white/10 flex flex-col gap-6">
-                  <div>
-                    <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Master Insight</div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-sm text-gray-400 leading-relaxed">
+            {/* AI Result Area - Revealed inside scrollable area */}
+            <AnimatePresence>
+              {showResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 p-6 rounded-3xl bg-white/5 border border-white/10"
+                >
+                  <div className={`flex items-center gap-2 mb-3 ${isCorrect ? 'text-accent' : 'text-red-400'}`}>
+                    {isCorrect ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                    <span className="text-sm font-black uppercase italic tracking-tighter">
+                      {isCorrect ? 'Perfect!' : 'AI Diagnosis'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed font-medium mb-4">
+                    {isCorrect ? MOCK_QUESTION.diagnostic.correct : MOCK_QUESTION.diagnostic.incorrect}
+                  </p>
+                  <div className="pt-4 border-t border-white/10">
+                    <div className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Concept Insights</div>
+                    <div className="text-[11px] text-gray-400 leading-relaxed italic">
                       {MOCK_QUESTION.explanation}
                     </div>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-4 py-2 rounded-full glass text-[10px] font-bold text-primary border-primary/30">#반도체_기초</span>
-                    <span className="px-4 py-2 rounded-full glass text-[10px] font-bold text-primary border-primary/30">#PN접합</span>
-                    <span className="px-4 py-2 rounded-full glass text-[10px] font-bold text-primary border-primary/30">#정류원리</span>
-                  </div>
-                </div>
-              </motion.div>
+          {/* Action Button - Sticky at bottom of card */}
+          <div className="mt-6 shrink-0">
+            {!showResult ? (
+              <button
+                onClick={() => setShowResult(true)}
+                disabled={selected === null}
+                className={`w-full py-5 rounded-[24px] font-black text-base transition-all flex items-center justify-center gap-2.5 ${
+                  selected !== null 
+                    ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-xl active:scale-95' 
+                    : 'bg-white/5 text-gray-600 cursor-not-allowed opacity-50'
+                }`}
+              >
+                <Sparkles size={18} />
+                정답 확인 및 AI 진단
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setShowResult(false);
+                  setSelected(null);
+                }}
+                className="w-full py-5 rounded-[24px] bg-white text-black font-black text-base hover:bg-gray-200 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl"
+              >
+                다음 문제로 도전
+                <ArrowRight size={18} />
+              </button>
             )}
-          </AnimatePresence>
-
-          {/* Action Button */}
-          {!showResult ? (
-            <button
-              onClick={() => setShowResult(true)}
-              disabled={selected === null}
-              className={`mt-12 w-full py-6 rounded-[32px] font-black text-lg transition-all flex items-center justify-center gap-3 ${
-                selected !== null 
-                  ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-[0_20px_40px_rgba(139,92,246,0.4)] active:scale-95' 
-                  : 'bg-white/5 text-gray-600 cursor-not-allowed grayscale'
-              }`}
-            >
-              <Sparkles size={20} />
-              정답 확인 및 AI 진단
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setShowResult(false);
-                setSelected(null);
-              }}
-              className="mt-12 w-full py-6 rounded-[32px] bg-white text-black font-black text-lg hover:bg-gray-200 transition-all flex items-center justify-center gap-3 active:scale-95"
-            >
-              다음 문제로 도전
-              <ArrowRight size={20} />
-            </button>
-          )}
+          </div>
         </motion.div>
       </main>
 
-      {/* Footer Meta */}
-      <footer className="mt-16 flex flex-col items-center gap-8 opacity-40 hover:opacity-100 transition-opacity">
-        <div className="flex gap-10">
-          <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-            <Share2 size={14} />
-            Share Progress
-          </button>
-          <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-            <Brain size={14} />
-            Root Cause Analysis
-          </button>
-        </div>
-        <div className="text-[10px] font-medium text-gray-500">
-          ALPHA PASS ENGINE v1.0.4 | SECURED BY AI AGENTS
+      {/* Navigation Dock (Optional) */}
+      <footer className="w-full max-w-2xl px-6 py-4 flex justify-center items-center opacity-30 shrink-0">
+        <div className="text-[9px] font-medium text-gray-500 uppercase tracking-tighter">
+          ALPHA PASS ENGINE v1.0.4 | SECURED
         </div>
       </footer>
     </div>
