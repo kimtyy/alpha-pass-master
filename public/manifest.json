@@ -1,0 +1,23 @@
+{
+  "name": "ALPHA PASS MASTER | AI 합격 비서",
+  "short_name": "Alpha Pass",
+  "description": "AI가 분석한 기출문제로 가장 빠르게 자격증을 정복하세요.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060608",
+  "theme_color": "#060608",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
