@@ -2,11 +2,8 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, MoreVertical } from 'lucide-react';
-import Link from 'next/link';
-
 import { useSearchParams } from 'next/navigation';
-import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, Bookmark, BarChart3, Info } from 'lucide-react';
+import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, Bookmark, BarChart3, Info, LayoutGrid, Trophy, RotateCcw, Home } from 'lucide-react';
 import Link from 'next/link';
 import { EXAM_DATA } from '@/data/exams';
 
@@ -18,6 +15,8 @@ export default function StudyPage() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
 
   const currentQuestion = subject.questions[currentIdx];
 
@@ -26,20 +25,92 @@ export default function StudyPage() {
     setSelected(index);
   };
 
+  const handleVerify = () => {
+    if (selected === currentQuestion.answer) {
+      setScore(prev => prev + 1);
+    }
+    setShowResult(true);
+  };
+
   const handleNext = () => {
     if (currentIdx < subject.questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
       setSelected(null);
       setShowResult(false);
     } else {
-      // Loop or finish
-      setCurrentIdx(0);
-      setSelected(null);
-      setShowResult(false);
+      setIsFinished(true);
     }
   };
 
+  const handleReset = () => {
+    setCurrentIdx(0);
+    setScore(0);
+    setSelected(null);
+    setShowResult(false);
+    setIsFinished(false);
+  };
+
   const isCorrect = selected === currentQuestion.answer;
+  const progressPercent = ((currentIdx + (showResult ? 1 : 0)) / subject.questions.length) * 100;
+
+  if (isFinished) {
+    return (
+      <div className="h-[100dvh] bg-[#060608] text-white flex flex-col items-center justify-center px-6 overflow-hidden relative">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 blur-[100px] rounded-full animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/10 blur-[100px] rounded-full animate-pulse" />
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-sm bg-[#0d0d12]/80 border border-white/10 rounded-[40px] p-10 backdrop-blur-3xl shadow-[0_30px_100px_rgba(0,0,0,0.8)] text-center relative overflow-hidden"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+          
+          <div className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center mx-auto mb-8 shadow-2xl relative">
+            <Trophy size={48} className="text-white relative z-10" />
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 bg-primary blur-2xl rounded-full"
+            />
+          </div>
+
+          <h1 className="text-3xl font-black mb-2 tracking-tight">Mission<br/>Accomplished</h1>
+          <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] mb-8">Alpha Pass Protocol Complete</p>
+
+          <div className="grid grid-cols-2 gap-4 mb-10">
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-4">
+              <div className="text-[10px] font-black text-gray-500 uppercase mb-1">Score</div>
+              <div className="text-2xl font-black text-primary">{Math.round((score / subject.questions.length) * 100)}%</div>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-4">
+              <div className="text-[10px] font-black text-gray-500 uppercase mb-1">Correct</div>
+              <div className="text-2xl font-black text-accent">{score} / {subject.questions.length}</div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button 
+              onClick={handleReset}
+              className="w-full py-5 rounded-[24px] bg-white text-black font-black flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
+            >
+              <RotateCcw size={18} />
+              다시 도전하기
+            </button>
+            <Link 
+              href="/dashboard"
+              className="w-full py-5 rounded-[24px] bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-2 active:scale-95 transition-all"
+            >
+              <Home size={18} />
+              공부방으로 복귀
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[100dvh] bg-[#060608] text-white flex flex-col items-center overflow-hidden">
@@ -67,7 +138,7 @@ export default function StudyPage() {
       {/* Progress Indicator */}
       <div className="w-full max-w-sm px-6 mb-4 shrink-0">
         <div className="flex justify-between text-[9px] font-black text-gray-600 uppercase mb-2 px-1 tracking-widest">
-          <span>Success Rate: 92%</span>
+          <span>Accuracy: {score > 0 ? Math.round((score / (currentIdx + (showResult ? 1 : 0))) * 100) : 0}%</span>
           <span>Item {currentIdx + 1} / {subject.questions.length}</span>
         </div>
         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden flex gap-1">
@@ -93,10 +164,8 @@ export default function StudyPage() {
             exit={{ opacity: 0, x: -20 }}
             className="flex-1 flex flex-col relative bg-[#0d0d12]/60 border border-white/10 rounded-[40px] p-6 md:p-10 backdrop-blur-3xl shadow-2xl overflow-hidden"
           >
-            {/* Subtle Glows */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[80px] -z-10" />
             
-            {/* Question Header */}
             <div className="shrink-0 mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg">
@@ -109,7 +178,6 @@ export default function StudyPage() {
               </h1>
             </div>
 
-            {/* Options List */}
             <div className="flex-1 overflow-y-auto pr-1 space-y-3 custom-scrollbar">
               {currentQuestion.options.map((option, idx) => (
                 <motion.button
@@ -136,7 +204,6 @@ export default function StudyPage() {
                 </motion.button>
               ))}
 
-              {/* AI Insight Area */}
               <AnimatePresence>
                 {showResult && (
                   <motion.div
@@ -170,11 +237,10 @@ export default function StudyPage() {
               </AnimatePresence>
             </div>
 
-            {/* Action Bar */}
             <div className="mt-6 shrink-0 flex gap-3">
               {!showResult ? (
                 <button
-                  onClick={() => setShowResult(true)}
+                  onClick={handleVerify}
                   disabled={selected === null}
                   className={`flex-1 py-5 rounded-[28px] font-black text-base transition-all flex items-center justify-center gap-2.5 relative overflow-hidden group ${
                     selected !== null 
@@ -204,7 +270,6 @@ export default function StudyPage() {
         </AnimatePresence>
       </main>
 
-      {/* Extreme Convenience Navigation Dock */}
       <footer className="w-full max-w-sm px-4 pt-2 pb-6 shrink-0">
         <div className="bg-[#1a1a20]/90 border border-white/10 rounded-[32px] p-2 flex justify-between items-center shadow-2xl backdrop-blur-2xl">
           <button className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl hover:bg-white/5 transition-colors text-gray-500">
