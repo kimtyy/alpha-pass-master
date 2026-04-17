@@ -26,35 +26,35 @@ export default function CertificationHub() {
       </div>
 
       {/* Hero / Search Section */}
-      <section className="pt-32 pb-12 px-6 relative flex flex-col items-center justify-center min-h-[60vh]">
+      <section className="pt-24 pb-12 px-6 relative flex flex-col items-center justify-center min-h-[50vh]">
         <div className="max-w-4xl mx-auto text-center w-full">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest mb-8"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest mb-6"
           >
-            <Zap size={12} className="fill-current" />
-            AI-Powered Certification Mastery
+            <Zap size={10} className="fill-current" />
+            Elite Intelligence OS
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-74xl font-black mb-10 tracking-tighter leading-none"
+            className="text-4xl md:text-6xl font-black mb-8 tracking-tighter leading-none"
           >
             어떤 자격증을 <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-indigo-400 to-accent">정복할까요?</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-indigo-400 to-accent text-3xl md:text-5xl">정복할까요?</span>
           </motion.h1>
           
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative max-w-2xl mx-auto group w-full"
+            className="relative max-w-xl mx-auto group w-full"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-3xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative flex items-center">
-              <Search className="absolute left-6 text-gray-400" size={22} />
+              <Search className="absolute left-6 text-gray-500" size={20} />
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -64,8 +64,8 @@ export default function CertificationHub() {
               >
                 <input 
                   type="search" 
-                  placeholder="자격증 명칭을 입력하세요 (예: 전자기기기능사)" 
-                  className="w-full bg-[#12121a]/80 border border-white/10 rounded-[32px] py-6 px-16 text-lg focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none"
+                  placeholder="자격증 명칭을 입력하세요" 
+                  className="w-full bg-[#12121a]/90 border border-white/10 rounded-[28px] py-5 px-14 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-700 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -77,53 +77,48 @@ export default function CertificationHub() {
 
       <main className="w-full max-w-2xl mx-auto px-6 pb-40">
         {/* Modules Grid */}
-        <section className="space-y-10">
+        <section className="space-y-8">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Available Missions</h3>
-            <span className="text-[10px] text-gray-700 font-bold">{filteredExams.length} Subjects Found</span>
+            <h3 className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em]">Active Missions</h3>
+            <span className="text-[9px] text-gray-700 font-bold">{filteredExams.length} Found</span>
           </div>
           
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-5">
             <AnimatePresence mode="popLayout">
               {filteredExams.map((exam) => (
                 <motion.div
                   key={exam.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="group relative bg-white/[0.02] border border-white/5 rounded-[48px] p-8 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-500"
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  className="group relative bg-[#09090b]/40 border border-white/5 rounded-[40px] p-8 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
                 >
                   <div className="flex justify-between items-start mb-10">
                     <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2.5 py-1 rounded-full bg-primary/10 text-[9px] text-primary font-black uppercase tracking-tighter border border-primary/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 rounded-md bg-primary/10 text-[8px] text-primary font-black uppercase tracking-tighter border border-primary/10">
                           {exam.category}
                         </span>
-                        {exam.id === 'electronic-craftsman' && (
-                          <span className="px-2.5 py-1 rounded-full bg-accent/10 text-[9px] text-accent font-black uppercase tracking-tighter border border-accent/10">
-                            Most Popular
-                          </span>
-                        )}
                       </div>
-                      <h3 className="text-2xl font-bold tracking-tighter">
+                      <h3 className="text-xl font-bold tracking-tighter text-gray-100">
                         {exam.title}
                       </h3>
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-primary group-hover:bg-primary/10 transition-all duration-500">
-                      {exam.category === 'Engineer' ? <Brain size={24} /> : <Zap size={24} />}
+                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
+                      {exam.category === 'Engineer' ? <Brain size={20} /> : <Zap size={20} />}
                     </div>
                   </div>
 
                   <Link 
                     href={`/study?id=${exam.id}`} 
-                    className="flex items-center justify-center w-full py-5 rounded-[28px] bg-white text-black font-black hover:bg-primary hover:text-white transition-all duration-500 shadow-xl group/btn"
+                    className="flex items-center justify-center w-full py-5 rounded-3xl bg-white text-black font-black hover:bg-primary hover:text-white transition-all duration-300 shadow-xl group/btn active:scale-95"
                   >
-                    <span className="text-base flex items-center gap-2">
-                      <GraduationCap size={20} />
+                    <span className="text-sm flex items-center gap-2">
+                      <GraduationCap size={18} />
                       무료 모의고사 시작
                     </span>
-                    <ChevronRight size={20} className="ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                    <ChevronRight size={18} className="ml-0.5 group-hover/btn:translate-x-1 transition-transform" />
                   </Link>
                 </motion.div>
               ))}
@@ -135,11 +130,11 @@ export default function CertificationHub() {
                 animate={{ opacity: 1 }}
                 className="py-20 text-center"
               >
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-600">
-                  <Search size={32} />
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-700">
+                  <Search size={24} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">검색 결과가 없습니다</h3>
-                <p className="text-sm text-gray-500">다른 자격증 이름을 입력해보세요.</p>
+                <h3 className="text-lg font-bold mb-1 text-gray-400">검색 결과가 없습니다</h3>
+                <p className="text-xs text-gray-600">자격증 명칭을 다시 한 번 확인해 주세요.</p>
               </motion.div>
             )}
           </div>
