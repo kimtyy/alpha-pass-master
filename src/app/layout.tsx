@@ -28,6 +28,8 @@ export const viewport: Viewport = {
   themeColor: "#060608",
 };
 
+import { FloatingNav } from "@/components/FloatingNav";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,6 +39,7 @@ export default function RootLayout({
     <html lang="ko" className="h-full antialiased dark scroll-smooth">
       <body className={`${inter.className} min-h-full flex flex-col bg-[#060608] text-white selection:bg-primary/30`}>
         {children}
+        <FloatingNav />
       </body>
     </html>
   );

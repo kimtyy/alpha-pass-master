@@ -17,6 +17,7 @@ function StudyContent() {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [history, setHistory] = useState<{idx: number, selected: number, isCorrect: boolean}[]>([]);
 
   const currentQuestion = subject.questions[currentIdx];
 
@@ -26,9 +27,11 @@ function StudyContent() {
   };
 
   const handleVerify = () => {
-    if (selected === currentQuestion.answer) {
+    const isCorrect = selected === currentQuestion.answer;
+    if (isCorrect) {
       setScore(prev => prev + 1);
     }
+    setHistory(prev => [...prev, { idx: currentIdx, selected: selected!, isCorrect }]);
     setShowResult(true);
   };
 
@@ -48,66 +51,217 @@ function StudyContent() {
     setSelected(null);
     setShowResult(false);
     setIsFinished(false);
+    setHistory([]);
   };
 
   const isCorrect = selected === currentQuestion.answer;
   const progressPercent = ((currentIdx + (showResult ? 1 : 0)) / subject.questions.length) * 100;
+  const passScore = Math.round((score / subject.questions.length) * 100);
+  const isPass = passScore >= 60;
+
+  const { status, isGuest, login } = useUser();
+  const [filter, setFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
+  const [activeReviewIdx, setActiveReviewIdx] = useState<number | null>(null);
+
+  const filteredHistory = history.filter(h => {
+    if (filter === 'all') return true;
+    if (filter === 'correct') return h.isCorrect;
+    if (filter === 'incorrect') return !h.isCorrect;
+    return true;
+  });
 
   if (isFinished) {
     return (
-      <div className="h-[100dvh] bg-[#060608] text-white flex flex-col items-center justify-center px-6 overflow-hidden relative">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 blur-[100px] rounded-full animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/10 blur-[100px] rounded-full animate-pulse" />
+      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center pb-20 relative overflow-x-hidden">
+        {/* Decorative Background */}
+        <div className="fixed inset-0 pointer-events-none -z-10">
+          <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-[60vh] opacity-20 blur-[120px] rounded-full ${isPass ? 'bg-accent' : 'bg-red-500'}`} />
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="w-full max-w-sm bg-[#0d0d12]/80 border border-white/10 rounded-[40px] p-10 backdrop-blur-3xl shadow-[0_30px_100px_rgba(0,0,0,0.8)] text-center relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+        {/* Verdict Banner */}
+        <header className="w-full pt-16 pb-10 px-6 text-center shrink-0">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className={`w-28 h-28 rounded-[40px] flex items-center justify-center mx-auto mb-6 shadow-2xl relative ${isPass ? 'bg-accent text-white' : 'bg-red-500 text-white'}`}
+          >
+            {isPass ? <Trophy size={56} /> : <AlertCircle size={56} />}
+            <div className={`absolute inset-0 blur-3xl rounded-full opacity-40 animate-pulse ${isPass ? 'bg-accent' : 'bg-red-500'}`} />
+          </motion.div>
           
-          <div className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center mx-auto mb-8 shadow-2xl relative">
-            <Trophy size={48} className="text-white relative z-10" />
-            <motion.div 
-              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute inset-0 bg-primary blur-2xl rounded-full"
-            />
+          <motion.h1 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="text-5xl font-black tracking-tighter mb-2"
+          >
+            {isPass ? 'MISSION PASS' : 'TRY AGAIN'}
+          </motion.h1>
+          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] mb-8">
+            AlphaPass Diagnostic Result
+          </p>
+
+          <div className="flex justify-center gap-6 max-w-sm mx-auto">
+            <div className="text-center">
+              <div className="text-[9px] font-black text-gray-600 uppercase mb-1">Pass Score</div>
+              <div className={`text-2xl font-black ${isPass ? 'text-accent' : 'text-red-400'}`}>{passScore}%</div>
+            </div>
+            <div className="w-[1px] h-10 bg-white/10" />
+            <div className="text-center">
+              <div className="text-[9px] font-black text-gray-600 uppercase mb-1">Target</div>
+              <div className="text-2xl font-black text-gray-400">60%</div>
+            </div>
+            <div className="w-[1px] h-10 bg-white/10" />
+            <div className="text-center">
+              <div className="text-[9px] font-black text-gray-600 uppercase mb-1">Items</div>
+              <div className="text-2xl font-black text-white">{score} <span className="text-xs text-gray-600">/ {subject.questions.length}</span></div>
+            </div>
+          </div>
+        </header>
+
+        {/* Selective Review Hub */}
+        <main className="w-full max-w-2xl px-6">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selective Review Hub</h3>
+            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+              {(['all', 'correct', 'incorrect'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => {
+                    setFilter(t);
+                    setActiveReviewIdx(null);
+                  }}
+                  className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase transition-all ${
+                    filter === t ? 'bg-white text-black' : 'text-gray-500 hover:text-white'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <h1 className="text-3xl font-black mb-2 tracking-tight">Mission<br/>Accomplished</h1>
-          <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] mb-8">Alpha Pass Protocol Complete</p>
+          <div className="space-y-4">
+            {filteredHistory.map((h, i) => {
+              const q = subject.questions[h.idx];
+              const isActive = activeReviewIdx === h.idx;
+              
+              return (
+                <div key={h.idx} className="group">
+                  <button
+                    onClick={() => setActiveReviewIdx(isActive ? null : h.idx)}
+                    className={`w-full text-left p-6 rounded-[32px] border transition-all duration-300 ${
+                      isActive 
+                        ? 'bg-white/10 border-white/20' 
+                        : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black border ${
+                        h.isCorrect ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                      }`}>
+                        {h.idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-[13px] font-bold leading-snug tracking-tight mb-1 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                          {q.question.length > 60 && !isActive ? q.question.substring(0, 60) + '...' : q.question}
+                        </p>
+                      </div>
+                      <div className={`transition-transform duration-300 ${isActive ? 'rotate-90' : ''}`}>
+                        <ArrowRight size={16} className="text-gray-600" />
+                      </div>
+                    </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-10">
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-4">
-              <div className="text-[10px] font-black text-gray-500 uppercase mb-1">Score</div>
-              <div className="text-2xl font-black text-primary">{Math.round((score / subject.questions.length) * 100)}%</div>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-4">
-              <div className="text-[10px] font-black text-gray-500 uppercase mb-1">Correct</div>
-              <div className="text-2xl font-black text-accent">{score} / {subject.questions.length}</div>
-            </div>
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pt-6 mt-6 border-t border-white/5 space-y-4">
+                            <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                              <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-2">Your Answer</span>
+                              <p className={`text-xs font-bold ${h.isCorrect ? 'text-accent' : 'text-red-400'}`}>{q.options[h.selected]}</p>
+                            </div>
+                            
+                            {!h.isCorrect && (
+                              <div className="bg-accent/5 rounded-2xl p-4 border border-accent/10">
+                                <span className="text-[8px] font-black text-accent uppercase tracking-widest block mb-2">Alpha Solution</span>
+                                <p className="text-xs font-bold text-white">{q.options[q.answer]}</p>
+                              </div>
+                            )}
+
+                            {/* THE GATE */}
+                            <div className="relative pt-2">
+                              {isGuest ? (
+                                <div className="space-y-3">
+                                  <div className="blur-sm opacity-30 select-none pointer-events-none">
+                                    <div className="text-[10px] font-black text-primary uppercase mb-2">AI Master Insight</div>
+                                    <p className="text-xs leading-relaxed text-gray-400">
+                                      {q.explanation}
+                                    </p>
+                                  </div>
+                                  <div className="bg-primary/10 border border-primary/20 rounded-2xl p-5 text-center">
+                                    <p className="text-[11px] font-black text-white mb-3 tracking-tight">상세 오답 해설은 회원에게만 제공됩니다.</p>
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        login();
+                                      }}
+                                      className="px-6 py-2 bg-primary text-white text-[10px] font-black rounded-xl hover:scale-105 transition-transform"
+                                    >
+                                      1초 회원가입 후 해설 보기
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                    <div className="text-[10px] font-black text-primary uppercase mb-2">AI Master Insight</div>
+                                    <p className="text-xs leading-relaxed text-gray-400 font-medium">
+                                      {q.explanation}
+                                    </p>
+                                  </div>
+                                  <div className="p-4 rounded-2xl bg-[#12121a] border border-accent/10">
+                                    <div className="text-[10px] font-black text-accent uppercase mb-2 flex items-center gap-1.5">
+                                      <Sparkles size={10} />
+                                      Diagnostic Detail
+                                    </div>
+                                    <p className="text-xs leading-relaxed text-gray-300 font-medium italic">
+                                      {h.isCorrect ? q.diagnostic.correct : q.diagnostic.incorrect}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="space-y-3">
+          <div className="mt-12 space-y-4">
             <button 
               onClick={handleReset}
-              className="w-full py-5 rounded-[24px] bg-white text-black font-black flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
+              className="w-full py-5 rounded-[28px] bg-white text-black font-black flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
             >
               <RotateCcw size={18} />
-              다시 도전하기
+              새로운 모의고사 도전하기
             </button>
             <Link 
               href="/dashboard"
-              className="w-full py-5 rounded-[24px] bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-2 active:scale-95 transition-all"
+              className="w-full py-5 rounded-[28px] bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
               <Home size={18} />
-              공부방으로 복귀
+              메인 화면으로 복귀
             </Link>
           </div>
-        </motion.div>
+        </main>
       </div>
     );
   }
