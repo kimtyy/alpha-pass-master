@@ -47,18 +47,18 @@ export default function CertificationHub() {
           </motion.h1>
           
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative max-w-2xl mx-auto group mt-8"
+            className="relative max-w-xl mx-auto group mt-6"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-indigo-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative flex items-center">
-              <Search className="absolute left-6 text-gray-400" size={20} />
+              <Search className="absolute left-5 text-gray-500" size={18} />
               <input 
                 type="text" 
-                placeholder="어떤 자격증에 도전하시겠습니까?" 
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 px-16 text-xl focus:outline-none focus:ring-2 focus:ring-primary/50 backdrop-blur-xl transition-all placeholder:text-gray-600 shadow-2xl"
+                placeholder="도전할 자격증을 검색하세요" 
+                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-14 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-xl"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

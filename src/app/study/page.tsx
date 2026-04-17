@@ -120,18 +120,18 @@ function StudyContent() {
       </div>
 
       {/* Top Navigation */}
-      <header className="w-full max-w-2xl px-6 py-4 flex justify-between items-center bg-transparent z-50 shrink-0">
-        <Link href="/dashboard" className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
-          <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+      <header className="w-full max-w-2xl px-5 py-2.5 flex justify-between items-center bg-transparent z-50 shrink-0">
+        <Link href="/dashboard" className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
+          <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
         </Link>
         <div className="flex flex-col items-center text-center px-4">
-          <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em] mb-0.5 opacity-70">Focus Mode Active</span>
+          <span className="text-[8px] text-primary font-black uppercase tracking-[0.2em] mb-0.5 opacity-70 italic">Alpha Focus Protocol</span>
           <div className="flex items-center gap-1.5 justify-center">
-            <h2 className="text-xs font-bold truncate max-w-[150px] tracking-tight">{subject.title}</h2>
+            <h2 className="text-[11px] font-bold truncate max-w-[150px] tracking-tight">{subject.title}</h2>
           </div>
         </div>
-        <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
-          <Share2 size={18} className="text-gray-500" />
+        <button className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+          <Share2 size={16} className="text-gray-600" />
         </button>
       </header>
 
@@ -162,18 +162,18 @@ function StudyContent() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="flex-1 flex flex-col relative bg-[#0d0d12]/60 border border-white/10 rounded-[40px] p-6 md:p-10 backdrop-blur-3xl shadow-2xl overflow-hidden"
+            className="flex-1 flex flex-col relative bg-[#09090d]/80 border border-white/5 rounded-[32px] p-4 md:p-8 backdrop-blur-3xl shadow-2xl overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[80px] -z-10" />
             
-            <div className="shrink-0 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-lg">
-                  <Brain size={16} />
+            <div className="shrink-0 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center text-primary border border-primary/20 shadow-md">
+                  <Brain size={14} />
                 </span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest italic">AI Core Intelligence</span>
+                <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest italic leading-none">AI Core</span>
               </div>
-              <h1 className="text-xl md:text-2xl font-bold leading-[1.4] tracking-tight">
+              <h1 className="text-lg md:text-xl font-bold leading-tight tracking-tight">
                 {currentQuestion.question}
               </h1>
             </div>
@@ -184,20 +184,20 @@ function StudyContent() {
                   key={idx}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleSelect(idx)}
-                  className={`w-full text-left p-4 md:p-5 rounded-3xl border-2 transition-all duration-300 relative group overflow-hidden ${
+                  className={`w-full text-left p-3.5 md:p-4 rounded-2xl border-2 transition-all duration-300 relative group overflow-hidden ${
                     selected === idx 
-                      ? 'bg-primary/20 border-primary shadow-[0_0_25px_rgba(139,92,246,0.15)]' 
-                      : 'bg-white/5 border-white/5 hover:border-white/20'
-                  } ${showResult && idx === currentQuestion.answer ? 'border-accent/40 bg-accent/10' : ''} 
-                    ${showResult && selected === idx && idx !== currentQuestion.answer ? 'border-red-500/40 bg-red-500/10' : ''}`}
+                      ? 'bg-primary/20 border-primary shadow-lg shadow-primary/5' 
+                      : 'bg-white/5 border-white/5'
+                  } ${showResult && idx === currentQuestion.answer ? 'border-accent/30 bg-accent/5' : ''} 
+                    ${showResult && selected === idx && idx !== currentQuestion.answer ? 'border-red-500/30 bg-red-500/5' : ''}`}
                 >
-                  <div className="flex items-center gap-4 relative z-10">
-                    <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-[11px] font-black border-2 transition-all ${
-                      selected === idx ? 'bg-primary border-primary text-white shadow-lg scale-110' : 'bg-white/5 border-white/10 text-gray-500'
+                  <div className="flex items-center gap-3 relative z-10">
+                    <span className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all ${
+                      selected === idx ? 'bg-primary border-primary text-white' : 'bg-white/5 border-white/10 text-gray-600'
                     }`}>
                       {idx + 1}
                     </span>
-                    <span className={`text-[15px] md:text-base transition-colors font-medium leading-tight ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
+                    <span className={`text-[14px] leading-tight transition-colors ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
                       {option}
                     </span>
                   </div>
