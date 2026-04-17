@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/hooks/useUser';
-import { User, LogIn, LogOut, ShieldCheck, Zap, Mail, ChevronRight, Star, Award } from 'lucide-react';
+import { User, LogIn, LogOut, ShieldCheck, Zap, Mail, ChevronRight, Star, Award, ArrowRight } from 'lucide-react';
 
 export default function AccountPage() {
   const { status, login, logout, subscribe, isGuest, isMember, isPremium } = useUser();
@@ -100,13 +100,13 @@ export default function AccountPage() {
               <LogOut size={20} />
               로그아웃
             </button>
-          )}
 
-          <div className="pt-6 text-center">
-            <p className="text-[10px] text-gray-600 font-medium">관리자의 도움이 필요하신가요?</p>
-            <button className="text-[10px] text-primary font-bold underline mt-1">support@alphapass.master</button>
+            <div className="pt-8 text-center">
+              <p className="text-[10px] text-gray-600 font-medium">관리자의 도움이 필요하신가요?</p>
+              <button className="text-[10px] text-primary font-bold underline mt-1">support@alphapass.master</button>
+            </div>
           </div>
-        </section>
+        )}
       </main>
 
       {/* Decorative Accents */}
