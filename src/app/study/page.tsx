@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, Bookmark, BarChart3, Info, LayoutGrid, Trophy, RotateCcw, Home } from 'lucide-react';
 import Link from 'next/link';
 import { EXAM_DATA } from '@/data/exams';
+import { useUser } from '@/hooks/useUser';
 
 function StudyContent() {
   const searchParams = useSearchParams();
