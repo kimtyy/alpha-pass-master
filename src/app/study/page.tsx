@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, Bookmark, BarChart3, Info, LayoutGrid, Trophy, RotateCcw, Home } from 'lucide-react';
 import Link from 'next/link';
 import { EXAM_DATA } from '@/data/exams';
 
-export default function StudyPage() {
+function StudyContent() {
   const searchParams = useSearchParams();
   const subjectId = searchParams.get('id') || 'electronic-craftsman';
   const subject = EXAM_DATA[subjectId] || EXAM_DATA['electronic-craftsman'];
@@ -294,5 +294,17 @@ export default function StudyPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function StudyPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-[100dvh] bg-[#060608] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <StudyContent />
+    </Suspense>
   );
 }
