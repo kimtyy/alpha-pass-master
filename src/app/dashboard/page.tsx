@@ -55,13 +55,21 @@ export default function CertificationHub() {
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative flex items-center">
               <Search className="absolute left-5 text-gray-500" size={18} />
-              <input 
-                type="text" 
-                placeholder="도전할 자격증을 검색하세요" 
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-14 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-xl"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  (e.target as any).querySelector('input')?.blur();
+                }}
+                className="w-full"
+              >
+                <input 
+                  type="search" 
+                  placeholder="도전할 자격증을 검색하세요" 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-14 text-base focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-xl [&::-webkit-search-cancel-button]:appearance-none"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </form>
             </div>
           </motion.div>
         </div>
