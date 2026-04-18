@@ -58,7 +58,7 @@ export default function CertificationHub() {
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative flex items-center">
-              <Search className="absolute left-6 text-gray-600" size={22} />
+              <Search className="absolute left-8 text-primary/50 group-focus-within:text-primary transition-colors" size={24} />
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -69,7 +69,7 @@ export default function CertificationHub() {
                 <input 
                   type="search" 
                   placeholder="Alpha Search" 
-                  className="w-full bg-[#12121a]/90 border border-white/5 rounded-[32px] py-6 px-16 text-base focus:outline-none focus:ring-1 focus:ring-white/10 backdrop-blur-3xl transition-all placeholder:text-gray-500 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none font-medium"
+                  className="w-full bg-[#12121a]/95 border-2 border-white/5 rounded-[40px] py-8 px-20 text-xl md:text-2xl font-black focus:outline-none focus:border-primary/30 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none tracking-tight"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -77,14 +77,14 @@ export default function CertificationHub() {
             </div>
           </motion.div>
 
-          {/* Shortcut Circles: Conditional Visibility (Hide when searching) */}
+          {/* Shortcut Circles: Conditional Visibility (Hide immediately when searching) */}
           <AnimatePresence>
-            {search.length === 0 && (
+            {!search && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ delay: 0.2 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="flex flex-wrap justify-center gap-6 md:gap-10 px-4"
               >
                 {allExams.slice(0, 5).map((exam) => (
@@ -93,10 +93,10 @@ export default function CertificationHub() {
                     onClick={() => setSearch(exam.title)}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-500 group-hover:bg-white/10 group-hover:text-primary transition-all duration-300 group-active:scale-90 shadow-lg">
+                    <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-500 group-hover:bg-white/10 group-hover:text-primary transition-all duration-300 group-active:scale-90 shadow-2xl">
                       {exam.category === 'Engineer' ? <Brain size={24} /> : <Zap size={24} />}
                     </div>
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
                       {exam.title.split(' ')[0]}
                     </span>
                   </button>
@@ -110,10 +110,13 @@ export default function CertificationHub() {
       {search.length > 0 && (
         <main className="w-full max-w-2xl mx-auto px-6 pb-48 animate-in fade-in slide-in-from-bottom-5 duration-500">
           {/* Modules Grid */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em]">Active Missions</h3>
-              <span className="text-[9px] text-gray-700 font-bold">{filteredExams.length + remainingCertificates.length} Found</span>
+          <section className="space-y-10">
+            <div className="flex items-center justify-between px-4 border-l-2 border-primary/30 ml-2">
+              <div className="flex flex-col">
+                <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">Active Missions</h3>
+                <p className="text-[9px] text-primary/50 font-bold uppercase tracking-widest">Protocol Search Results</p>
+              </div>
+              <span className="text-[10px] text-gray-500 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/5">{filteredExams.length + remainingCertificates.length} Found</span>
             </div>
             
             <div className="grid grid-cols-1 gap-5">
