@@ -23,12 +23,13 @@ function StudyContent() {
   const [isFinished, setIsFinished] = useState(false);
   
   // CBT Exclusive State
+  const [shuffledQuestions, setShuffledQuestions] = useState<any[]>([]);
   const [examAnswers, setExamAnswers] = useState<Record<number, number | null>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
   const [isOmrOpen, setIsOmrOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes default
   const [isTimerActive, setIsTimerActive] = useState(true);
-  const [history, setHistory] = useState<{idx: number, selected: number, isCorrect: boolean, isConfident?: boolean, timeTaken?: number}[]>([]);
+  const [history, setHistory] = useState<{idx: number, originalIdx: number, selected: number, isCorrect: boolean, isConfident?: boolean, timeTaken?: number}[]>([]);
 
   const { status, isGuest, login } = useUser();
   const [filter, setFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
@@ -47,21 +48,34 @@ function StudyContent() {
     return () => clearInterval(interval);
   }, [isTimerActive, timeLeft]);
 
-  const currentQuestion = subject.questions[currentIdx];
-
-  // Initialize exam on mount
+  // Initialize exam and Shuffle on mount
   React.useEffect(() => {
+    // Fish-Yates Shuffle
+    const questions = [...subject.questions];
+    for (let i = questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
+    
+    // Add original index for tracking if needed
+    const shuffled = questions.map((q, i) => ({ ...q, originalIdx: i }));
+    setShuffledQuestions(shuffled);
+    
     const initial: Record<number, number | null> = {};
-    subject.questions.forEach((_, i) => initial[i] = null);
+    shuffled.forEach((_, i) => initial[i] = null);
     setExamAnswers(initial);
+    setCurrentIdx(0);
+    setSelected(null);
   }, [subjectId]);
+
+  const currentQuestion = shuffledQuestions[currentIdx];
 
   const handleSelect = (index: number) => {
     setSelected(index);
     setExamAnswers(prev => ({ ...prev, [currentIdx]: index }));
     
     // Auto-advance logic (MBTI Style)
-    if (currentIdx < subject.questions.length - 1) {
+    if (currentIdx < shuffledQuestions.length - 1) {
       setTimeout(() => {
         const nextIdx = currentIdx + 1;
         setCurrentIdx(nextIdx);
@@ -108,15 +122,16 @@ function StudyContent() {
     let totalScore = 0;
     const finalHistory: any[] = [];
     
-    subject.questions.forEach((q, i) => {
+    shuffledQuestions.forEach((q, i) => {
       const userAnswer = examAnswers[i];
       const isCorrect = userAnswer === q.answer;
       if (isCorrect) totalScore++;
       finalHistory.push({
         idx: i,
+        originalIdx: q.originalIdx,
         selected: userAnswer,
         isCorrect,
-        isConfident: true // Exam mode assumes confidence is the goal
+        isConfident: true
       });
     });
 
@@ -126,7 +141,7 @@ function StudyContent() {
 
     // Calc stats for saving
     const subjectStatsLocal = finalHistory.reduce((acc: any, h: any) => {
-      const q = subject.questions[h.idx];
+      const q = shuffledQuestions[h.idx];
       if (!acc[q.subject]) acc[q.subject] = { total: 0, correct: 0 };
       acc[q.subject].total++;
       if (h.isCorrect) acc[q.subject].correct++;
@@ -250,7 +265,7 @@ function StudyContent() {
             <div className="w-[1px] h-10 bg-white/10" />
             <div className="text-center">
               <div className="text-[9px] font-black text-gray-600 uppercase mb-1 tracking-widest">Correct</div>
-              <div className="text-2xl font-black text-white">{score} <span className="text-[10px] text-gray-700">/ {subject.questions.length}</span></div>
+              <div className="text-2xl font-black text-white">{score} <span className="text-[10px] text-gray-700">/ {shuffledQuestions.length}</span></div>
             </div>
           </div>
 
@@ -622,10 +637,10 @@ function StudyContent() {
               <div className="shrink-0 mb-4 flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">Item {currentIdx + 1} / {subject.questions.length}</span>
+                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">Item {currentIdx + 1} / {shuffledQuestions.length}</span>
                   </div>
                   <h1 className="text-[17px] md:text-xl font-bold leading-snug tracking-tight text-gray-200">
-                    {currentQuestion.question}
+                    {currentQuestion?.question}
                   </h1>
                 </div>
                 <button 
@@ -691,7 +706,7 @@ function StudyContent() {
           <div className="mb-8 overflow-y-auto pr-2">
             <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Exam Tracker</h3>
             <div className="grid grid-cols-5 gap-3">
-              {subject.questions.map((_, i) => (
+              {shuffledQuestions.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => {
@@ -750,7 +765,7 @@ function StudyContent() {
             
             <div className="flex-1 overflow-y-auto p-6">
               <div className="grid grid-cols-5 gap-4">
-                {subject.questions.map((_, i) => (
+                {shuffledQuestions.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => {
