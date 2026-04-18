@@ -581,8 +581,8 @@ function StudyContent() {
         <div className="absolute top-0 left-1/4 w-full h-1/2 bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
-      {/* CBT Header: Slimmed */}
-      <header className="w-full max-w-2xl px-5 pt-10 pb-4 flex justify-between items-center bg-[#09090d]/80 backdrop-blur-xl border-b border-white/5 z-50 shrink-0">
+      {/* CBT Header: Compacted for One-Screen */}
+      <header className="w-full max-w-2xl px-5 pt-6 pb-3 flex justify-between items-center bg-[#09090d]/80 backdrop-blur-xl border-b border-white/5 z-50 shrink-0">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="p-2 rounded-xl bg-white/5 border border-white/10">
             <ChevronLeft size={16} />
@@ -617,14 +617,14 @@ function StudyContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="flex-1 flex flex-col relative bg-[#12121a]/60 border border-white/5 rounded-[40px] p-8 md:p-12 backdrop-blur-3xl shadow-2xl overflow-hidden"
+              className="flex-1 flex flex-col relative bg-[#12121a]/60 border border-white/5 rounded-[40px] p-6 md:p-12 backdrop-blur-3xl shadow-2xl overflow-hidden"
             >
-              <div className="shrink-0 mb-6 flex justify-between items-start">
+              <div className="shrink-0 mb-4 flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Item {currentIdx + 1} / {subject.questions.length}</span>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">Item {currentIdx + 1} / {subject.questions.length}</span>
                   </div>
-                  <h1 className="text-lg md:text-xl font-bold leading-tight tracking-tight text-gray-200">
+                  <h1 className="text-[17px] md:text-xl font-bold leading-snug tracking-tight text-gray-200">
                     {currentQuestion.question}
                   </h1>
                 </div>
@@ -640,25 +640,25 @@ function StudyContent() {
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+              <div className="flex-1 flex flex-col gap-2.5 overflow-hidden">
                 {currentQuestion.options.map((option, idx) => (
                   <motion.button
                     key={idx}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSelect(idx)}
-                    className={`w-full text-left p-5 rounded-3xl border-2 transition-all duration-200 relative ${
+                    className={`w-full text-left p-4 rounded-3xl border-2 transition-all duration-200 relative ${
                       selected === idx 
                         ? 'bg-white/10 border-white/20' 
                         : 'bg-white/[0.02] border-white/5'
                     }`}
                   >
                     <div className="flex items-center gap-4 relative z-10">
-                      <span className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all ${
+                      <span className={`w-6 h-6 shrink-0 rounded-lg flex items-center justify-center text-[9px] font-black border transition-all ${
                         selected === idx ? 'bg-white border-white text-black' : 'bg-white/5 border-white/10 text-gray-600'
                       }`}>
                         {idx + 1}
                       </span>
-                      <span className={`text-[14px] font-medium leading-snug ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
+                      <span className={`text-[13.5px] font-medium leading-tight ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
                         {option}
                       </span>
                     </div>
@@ -666,20 +666,20 @@ function StudyContent() {
                 ))}
               </div>
 
-              {/* Navigation Footer */}
-              <div className="mt-10 mb-8 shrink-0 flex gap-4">
+              {/* Navigation Footer: Compacted */}
+              <div className="mt-6 mb-4 shrink-0 flex gap-3">
                 <button onClick={() => {
                   if (currentIdx > 0) {
                     const next = currentIdx - 1;
                     setCurrentIdx(next);
                     setSelected(examAnswers[next] || null);
                   }
-                }} disabled={currentIdx === 0} className="px-8 py-6 rounded-3xl bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-30 active:scale-95 transition-all">
-                  <ChevronLeft size={24} />
+                }} disabled={currentIdx === 0} className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-30 active:scale-95 transition-all">
+                  <ChevronLeft size={20} />
                 </button>
-                <button onClick={handleNext} className="flex-1 py-6 rounded-3xl bg-[#1a1a20] border border-white/5 text-white font-black text-base shadow-xl active:scale-95 flex items-center justify-center gap-3">
+                <button onClick={handleNext} className="flex-1 py-4 rounded-2xl bg-[#1a1a20] border border-white/5 text-white font-black text-sm shadow-xl active:scale-95 flex items-center justify-center gap-2">
                   {currentIdx < subject.questions.length - 1 ? 'Next Item' : 'Review & Submit'}
-                  <ArrowRight size={20} />
+                  <ArrowRight size={18} />
                 </button>
               </div>
             </motion.div>
