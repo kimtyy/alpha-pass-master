@@ -92,9 +92,8 @@ function StudyContent() {
       idx: currentIdx, 
       selected: selected!, 
       isCorrect,
-      isConfident: confidences[currentIdx] || false 
+      isConfident: true 
     }]);
-    setShowResult(true);
   };
 
   const handleNext = () => {
@@ -157,11 +156,10 @@ function StudyContent() {
   };
 
   const handleReset = () => {
-    setMode(null);
+    setMode('exam');
     setCurrentIdx(0);
     setScore(0);
     setSelected(null);
-    setShowResult(false);
     setIsFinished(false);
     setHistory([]);
     setExamAnswers({});
@@ -202,9 +200,9 @@ function StudyContent() {
     return min;
   }, null as any);
 
-  // Metacognitive Blindspots
+  // Metacognitive Analysis
   const blindspots = history.filter(h => !h.isCorrect && h.isConfident).length; // "Confident but wrong"
-  const luckyStrikes = history.filter(h => h.isCorrect && !h.isConfident && mode === 'training').length; // "Unsure but right"
+  const luckyStrikes = history.filter(h => h.isCorrect && !h.isConfident).length; // "Unsure but right"
 
   // Remove selection screen, always exam
 
