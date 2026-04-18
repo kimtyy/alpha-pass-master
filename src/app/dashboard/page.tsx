@@ -3,8 +3,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Search, BookOpen, GraduationCap, ChevronRight, Plus, Star, Filter, LayoutGrid, Clock, Calendar, Zap, Brain } from 'lucide-react';
+import { Search, BookOpen, GraduationCap, ChevronRight, Plus, Star, Filter, LayoutGrid, Clock, Calendar, Zap, Brain, Sparkles } from 'lucide-react';
 import { EXAM_DATA } from '@/data/exams';
+import { CERTIFICATE_LIST } from '@/data/certificates';
+import { AIAssistant } from '@/components/AIAssistant';
+import { STAFF_MESSAGES } from '@/data/staff';
 
 export default function CertificationHub() {
   const [search, setSearch] = useState('');
@@ -17,6 +20,16 @@ export default function CertificationHub() {
     return matchesSearch && matchesCategory;
   });
 
+  const remainingCertificates = CERTIFICATE_LIST.filter(cert => {
+    // Only show if not already in EXAM_DATA and matches search/category
+    const isInExamData = allExams.some(e => e.id === cert.id);
+    if (isInExamData) return false;
+    
+    const matchesSearch = cert.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = activeCategory === 'All' || cert.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div className="min-h-screen bg-[#060608] text-white selection:bg-primary/30 pb-28 overflow-x-hidden">
       {/* Background Decor */}
@@ -26,7 +39,7 @@ export default function CertificationHub() {
       </div>
 
       {/* Hero / Search Section */}
-      <section className="pt-24 pb-12 px-6 relative flex flex-col items-center justify-center min-h-[50vh]">
+      <section className="pt-24 pb-8 px-6 relative flex flex-col items-center justify-center min-h-[40vh]">
         <div className="max-w-4xl mx-auto text-center w-full">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -64,8 +77,8 @@ export default function CertificationHub() {
               >
                 <input 
                   type="search" 
-                  placeholder="자격증 명칭을 입력하세요" 
-                  className="w-full bg-[#12121a]/90 border border-white/10 rounded-[28px] py-5 px-14 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-700 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none"
+                  placeholder="시험 명칭 입력 (예: 산업안전기사, 정보처리기사)" 
+                  className="w-full bg-[#12121a]/90 border border-white/10 rounded-[28px] py-4 px-14 text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-700 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -76,11 +89,25 @@ export default function CertificationHub() {
       </section>
 
       <main className="w-full max-w-2xl mx-auto px-6 pb-40">
+        {/* Staff Advice Section */}
+        <div className="mb-12 space-y-4">
+          <AIAssistant 
+            staffId="kidari" 
+            message="큐넷 데이터 베이스 동기화 완료. 현재 70여 개의 종목 분석 프로토콜이 가동 중입니다. 검색하여 미션을 확인하십시오."
+            context="dashboard"
+          />
+          <AIAssistant 
+            staffId="youngja" 
+            message="수험생 여러분! 기출 한 세트만 봐도 합격 길을 디자인하는 우리 부장님의 실력, 믿음직스럽죠? 곧 모든 종목의 예쁜 해설도 도착할 거예요!"
+            context="dashboard"
+          />
+        </div>
+
         {/* Modules Grid */}
         <section className="space-y-8">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-[9px] font-black text-gray-600 uppercase tracking-[0.2em]">Active Missions</h3>
-            <span className="text-[9px] text-gray-700 font-bold">{filteredExams.length} Found</span>
+            <span className="text-[9px] text-gray-700 font-bold">{filteredExams.length + remainingCertificates.length} Found</span>
           </div>
           
           <div className="grid grid-cols-1 gap-5">
@@ -94,6 +121,11 @@ export default function CertificationHub() {
                   exit={{ opacity: 0, scale: 0.98 }}
                   className="group relative bg-[#09090b]/40 border border-white/5 rounded-[40px] p-8 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
                 >
+                  <div className="absolute top-6 right-8">
+                    <span className="px-2 py-0.5 rounded-md bg-accent/10 text-[7px] text-accent font-black uppercase tracking-tighter border border-accent/10">
+                      AI Bank Ready
+                    </span>
+                  </div>
                   <div className="flex justify-between items-start mb-10">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
@@ -122,9 +154,46 @@ export default function CertificationHub() {
                   </Link>
                 </motion.div>
               ))}
+
+              {/* Discovery Certificates */}
+              {remainingCertificates.map((cert) => (
+                <motion.div
+                  key={cert.id}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="group relative bg-white/[0.01] border border-white/5 rounded-[40px] p-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                >
+                  <div className="absolute top-6 right-8">
+                    <span className="px-2 py-0.5 rounded-md bg-white/5 text-[7px] text-gray-500 font-black uppercase tracking-tighter border border-white/5">
+                      Analyzing Protocol
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2 py-0.5 rounded-md bg-white/5 text-[8px] text-gray-500 font-black uppercase tracking-tighter border border-white/5">
+                          {cert.category}
+                        </span>
+                        <span className="text-[9px] text-gray-700 font-bold">{cert.field}</span>
+                      </div>
+                      <h3 className="text-lg font-bold tracking-tighter text-gray-400">
+                        {cert.name}
+                      </h3>
+                    </div>
+                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-gray-800">
+                      <Clock size={18} />
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-center w-full py-4 rounded-2xl border border-white/5 text-gray-600 text-[11px] font-black tracking-tight">
+                    키다리부장이 문제은행을 생성 중입니다...
+                  </div>
+                </motion.div>
+              ))}
             </AnimatePresence>
 
-            {filteredExams.length === 0 && (
+            {filteredExams.length === 0 && remainingCertificates.length === 0 && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

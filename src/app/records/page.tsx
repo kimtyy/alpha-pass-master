@@ -3,17 +3,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/hooks/useUser';
-import { History, Lock, Zap, BookOpen, Star, TrendingUp, Calendar, ChevronRight } from 'lucide-react';
+import { History, Lock, Zap, BookOpen, Star, TrendingUp, Calendar, ChevronRight, BarChart3, Target, Activity } from 'lucide-react';
 import Link from 'next/link';
+import { StudyStorage, StudyRecord } from '@/lib/storage';
+import { AIAssistant } from '@/components/AIAssistant';
 
 export default function RecordsPage() {
-  const { isPremium, isLoaded } = useUser();
+  const { isPremium, isLoaded, status } = useUser();
+  const [records, setRecords] = React.useState<StudyRecord[]>([]);
+  const [stats, setStats] = React.useState<any>(null);
 
-  const mockRecords = [
-    { title: '전자기기기능사', date: '2026.04.16', score: 85, status: 'PASS' },
-    { title: '정보처리기사', date: '2026.04.15', score: 45, status: 'FAIL' },
-    { title: '전기기능사', date: '2026.04.14', score: 70, status: 'PASS' },
-  ];
+  React.useEffect(() => {
+    const data = StudyStorage.getRecords();
+    const s = StudyStorage.getStats();
+    setRecords(data);
+    setStats(s);
+  }, []);
 
   if (!isLoaded) return null;
 
@@ -70,51 +75,109 @@ export default function RecordsPage() {
           </motion.div>
         ) : (
           /* PREMIUM CONTENT (HISTORY) */
-          <div className="space-y-8">
+          records.length === 0 ? (
+            <div className="text-center py-20 px-10 bg-white/[0.02] border border-white/5 rounded-[40px]">
+            <Activity size={40} className="mx-auto mb-4 text-gray-700" />
+            <h3 className="text-sm font-bold text-gray-400 mb-2">아직 학습 기록이 없습니다</h3>
+            <p className="text-[10px] text-gray-600 mb-8 uppercase tracking-widest leading-relaxed">
+              모의고사나 훈련을 시작하여<br/>합격 데이터를 쌓아보세요
+            </p>
+            <Link href="/dashboard" className="inline-flex px-8 py-3 bg-white text-black text-[10px] font-black rounded-xl uppercase tracking-tighter">
+              학습 시작하기
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+            {/* Stats Summary Area */}
             <section className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 border border-white/5 rounded-[32px] p-6">
-                <div className="text-[9px] font-black text-gray-500 uppercase mb-2 tracking-widest">Average Score</div>
-                <div className="text-3xl font-black text-accent">67%</div>
+              <div className="bg-[#12121a] border border-white/5 rounded-[32px] p-6 group hover:border-primary/40 transition-all duration-500">
+                <div className="text-[9px] font-black text-gray-500 uppercase mb-2 tracking-widest flex items-center gap-1.5">
+                  <Target size={10} />
+                  Avg Rate
+                </div>
+                <div className="text-3xl font-black text-primary tracking-tighter">{stats?.avgScore || 0}%</div>
               </div>
-              <div className="bg-white/5 border border-white/5 rounded-[32px] p-6">
-                <div className="text-[9px] font-black text-gray-500 uppercase mb-2 tracking-widest">Best Mission</div>
-                <div className="text-3xl font-black text-primary">85%</div>
+              <div className="bg-[#12121a] border border-white/5 rounded-[32px] p-6 group hover:border-accent/40 transition-all duration-500">
+                <div className="text-[9px] font-black text-gray-500 uppercase mb-2 tracking-widest flex items-center gap-1.5">
+                  <Star size={10} />
+                  Top Rate
+                </div>
+                <div className="text-3xl font-black text-accent tracking-tighter">{stats?.bestScore || 0}%</div>
               </div>
             </section>
 
+            {/* Management Insight Area (Kidari Special) */}
             <section className="space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Recent Performance</h3>
-                <TrendingUp size={14} className="text-accent" />
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Management Console</h3>
+                <TrendingUp size={14} className="text-secondary" />
+              </div>
+              <AIAssistant 
+                staffId="kidari" 
+                message={records.length > 2 
+                  ? `지속적 관리 데이터 ${records.length}건이 확보되었습니다. 현재 평균 정답률은 ${stats?.avgScore}%이며, 성적 추이는 '${stats?.trend === 'improving' ? '상승세' : stats?.trend === 'declining' ? '하락세' : '안정적'}'입니다. ${stats?.trend === 'improving' ? '흐름이 좋습니다. 이대로 정진하십시오.' : '패턴 분석이 필요합니다. 취약 단원을 집중 보완하십시오.'}`
+                  : "데이터가 아직 부족합니다. 최소 3회 이상의 모의고사를 통해 정밀한 합격 곡선을 설계하십시오."
+                }
+                context="exam"
+              />
+              {!isPremium && (
+                <div className="p-6 rounded-[32px] bg-gradient-to-br from-accent/10 to-transparent border border-accent/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap size={14} className="text-accent fill-current" />
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Growth Analytics locked</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 leading-relaxed font-medium mb-4">
+                    과거 성적 변화 그래프와 단원별 상세 실력 트래킹은 프리미엄 멤버십에서만 제공됩니다.
+                  </p>
+                  <Link href="/account" className="text-[10px] font-black text-accent uppercase tracking-widest hover:underline">
+                    Upgrade to Premium &rarr;
+                  </Link>
+                </div>
+              )}
+            </section>
+
+            {/* Recent History List */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Activity History</h3>
+                <Link href="#" className="text-[9px] font-black text-gray-600 uppercase hover:text-white transition-colors">See All</Link>
               </div>
               
-              {mockRecords.map((record, i) => (
-                <div 
-                  key={i}
-                  className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 flex items-center justify-between group hover:bg-white/[0.05] transition-all"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${
-                      record.status === 'PASS' ? 'bg-accent/10 text-accent' : 'bg-red-500/10 text-red-500'
-                    }`}>
-                      {record.score}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm tracking-tight text-gray-200">{record.title}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Calendar size={10} className="text-gray-600" />
-                        <span className="text-[10px] text-gray-600 font-medium">{record.date}</span>
+              <div className="space-y-3">
+                {records.map((record, i) => (
+                  <div 
+                    key={record.id}
+                    className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 flex items-center justify-between group hover:bg-white/[0.05] transition-all"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${
+                        record.isPass ? 'bg-accent/10 text-accent' : 'bg-red-500/10 text-red-500'
+                      }`}>
+                        {Math.round((record.score / record.totalQuestions) * 100)}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm tracking-tight text-gray-200">{record.subjectTitle}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${record.mode === 'exam' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'}`}>
+                            {record.mode}
+                          </span>
+                          <span className="text-[10px] text-gray-600 font-medium">
+                            {new Date(record.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Weakness</span>
+                      <span className="text-[10px] font-bold text-gray-400">{record.weakestSubject}</span>
+                    </div>
                   </div>
-                  <button className="p-3 rounded-xl bg-white/5 text-gray-600 group-hover:text-white transition-colors">
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </section>
           </div>
-        )}
+        )
+      )}
       </main>
     </div>
   );

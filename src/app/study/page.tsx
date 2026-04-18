@@ -7,6 +7,9 @@ import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Sh
 import Link from 'next/link';
 import { EXAM_DATA } from '@/data/exams';
 import { useUser } from '@/hooks/useUser';
+import { STAFF_MESSAGES, ALPHA_STAFF } from '@/data/staff';
+import { AIAssistant, StaffBubble } from '@/components/AIAssistant';
+import { StudyStorage } from '@/lib/storage';
 
 function StudyContent() {
   const searchParams = useSearchParams();
@@ -24,7 +27,8 @@ function StudyContent() {
   const [examAnswers, setExamAnswers] = useState<Record<number, number | null>>({});
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes default
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [history, setHistory] = useState<{idx: number, selected: number, isCorrect: boolean, timeTaken?: number}[]>([]);
+  const [history, setHistory] = useState<{idx: number, selected: number, isCorrect: boolean, isConfident?: boolean, timeTaken?: number}[]>([]);
+  const [confidences, setConfidences] = useState<Record<number, boolean>>({});
 
   const { status, isGuest, login } = useUser();
   const [filter, setFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
@@ -64,12 +68,21 @@ function StudyContent() {
     }
   };
 
+  const toggleConfidence = () => {
+    setConfidences(prev => ({ ...prev, [currentIdx]: !prev[currentIdx] }));
+  };
+
   const handleVerify = () => {
     const isCorrect = selected === currentQuestion.answer;
     if (isCorrect) {
       setScore(prev => prev + 1);
     }
-    setHistory(prev => [...prev, { idx: currentIdx, selected: selected!, isCorrect }]);
+    setHistory(prev => [...prev, { 
+      idx: currentIdx, 
+      selected: selected!, 
+      isCorrect,
+      isConfident: confidences[currentIdx] || false 
+    }]);
     setShowResult(true);
   };
 
@@ -80,6 +93,19 @@ function StudyContent() {
       setSelected(mode === 'exam' ? examAnswers[nextIdx] : null);
       setShowResult(false);
     } else if (mode === 'training') {
+      // Save Training Record
+      StudyStorage.saveRecord({
+        subjectId,
+        subjectTitle: subject.title,
+        score,
+        totalQuestions: subject.questions.length,
+        isPass: score / subject.questions.length >= 0.6,
+        mode: 'training',
+        weakestSubject: weakestSubject?.name || '기타',
+        blindspots,
+        luckyStrikes,
+        subjectMastery: subjectStats
+      });
       setIsFinished(true);
     }
   };
@@ -104,13 +130,43 @@ function StudyContent() {
       finalHistory.push({
         idx: i,
         selected: userAnswer,
-        isCorrect
+        isCorrect,
+        isConfident: true // Exam mode assumes confidence is the goal
       });
     });
 
     setScore(totalScore);
     setHistory(finalHistory);
     setIsTimerActive(false);
+
+    // Calc stats for saving
+    const subjectStatsLocal = finalHistory.reduce((acc: any, h: any) => {
+      const q = subject.questions[h.idx];
+      if (!acc[q.subject]) acc[q.subject] = { total: 0, correct: 0 };
+      acc[q.subject].total++;
+      if (h.isCorrect) acc[q.subject].correct++;
+      return acc;
+    }, {});
+    const weakestLocal = Object.entries(subjectStatsLocal).reduce((min: any, [sub, stat]: any) => {
+      const rate = stat.correct / stat.total;
+      if (!min || rate < min.rate) return { name: sub, rate };
+      return min;
+    }, null);
+
+    // Save Exam Record
+    StudyStorage.saveRecord({
+      subjectId,
+      subjectTitle: subject.title,
+      score: totalScore,
+      totalQuestions: subject.questions.length,
+      isPass: totalScore / subject.questions.length >= 0.6,
+      mode: 'exam',
+      weakestSubject: weakestLocal?.name || '기타',
+      blindspots: finalHistory.filter((h: any) => !h.isCorrect && h.isConfident).length,
+      luckyStrikes: 0,
+      subjectMastery: subjectStatsLocal
+    });
+
     setIsFinished(true);
   };
 
@@ -142,6 +198,27 @@ function StudyContent() {
     if (filter === 'incorrect') return !h.isCorrect;
     return true;
   });
+
+  // ----------------------------------------------------------------
+  // DIAGNOSTIC ENGINE COMPUTE
+  // ----------------------------------------------------------------
+  const subjectStats = history.reduce((acc: Record<string, {total: number, correct: number}>, h) => {
+    const q = subject.questions[h.idx];
+    if (!acc[q.subject]) acc[q.subject] = { total: 0, correct: 0 };
+    acc[q.subject].total++;
+    if (h.isCorrect) acc[q.subject].correct++;
+    return acc;
+  }, {});
+
+  const weakestSubject = Object.entries(subjectStats).reduce((min: any, [sub, stat]: any) => {
+    const rate = stat.correct / stat.total;
+    if (!min || rate < min.rate) return { name: sub, rate, ...stat };
+    return min;
+  }, null as any);
+
+  // Metacognitive Blindspots
+  const blindspots = history.filter(h => !h.isCorrect && h.isConfident).length; // "Confident but wrong"
+  const luckyStrikes = history.filter(h => h.isCorrect && !h.isConfident && mode === 'training').length; // "Unsure but right"
 
   // 0. MODE SELECTION SCREEN
   if (!mode && !isFinished) {
@@ -261,6 +338,61 @@ function StudyContent() {
                 {t}
               </button>
             ))}
+          </div>
+
+          {/* Detailed Diagnosis UI */}
+          <div className="w-full max-w-xl mx-auto mb-16 space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+            {/* Subject Mastery Card */}
+            <div className="bg-[#12121a]/80 border border-white/5 rounded-[40px] p-8 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-6">
+                  <BarChart3 size={14} className="text-primary" />
+                  <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Chapter Performance</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  {Object.entries(subjectStats).map(([sub, stat]: any) => (
+                    <div key={sub} className="space-y-2">
+                      <div className="flex justify-between items-end">
+                        <span className="text-xs font-bold text-gray-300">{sub}</span>
+                        <span className="text-[10px] font-black text-gray-500 tracking-tighter">{stat.correct} / {stat.total}</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(stat.correct / stat.total) * 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className={`h-full rounded-full ${ (stat.correct / stat.total) >= 0.6 ? 'bg-primary' : 'bg-red-500' }`}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* AI Staff Prescriptions */}
+            <div className="space-y-4">
+              <AIAssistant 
+                staffId="kidari" 
+                message={weakestSubject 
+                  ? `귀하의 [${weakestSubject.name}] 단원은 정답률 ${(weakestSubject.rate * 100).toFixed(0)}%로 매우 취약합니다. ${blindspots > 0 ? `특히 확신이 있었음에도 틀린 문제가 ${blindspots}건 발견되었습니다.` : ''} 이 영역의 기초 설계를 다시 검토하십시오.` 
+                  : "전반적인 데이터 밸런스가 좋습니다. 현재의 학습 질서를 유지하십시오."
+                }
+                context="exam"
+              />
+              <AIAssistant 
+                staffId="youngja" 
+                message={luckyStrikes > 0 
+                  ? `어머! 헷갈렸는데 맞힌 행운의 문제가 ${luckyStrikes}개나 되네요? ✨ 이 친구들까지 완벽히 내 것으로 만들면 합격 디자인이 완성될 거예요!` 
+                  : isPass 
+                    ? "대표님 말씀대로 아는 걸 안다고 할 때 가장 빛나는 법이죠! 완벽한 페이스예요. ^^" 
+                    : "조금 아쉽지만 단추를 다시 채우면 돼요! 영자실장이 취약 단원을 예쁘게 정리해 드릴게요."
+                }
+                context="training"
+              />
+            </div>
           </div>
         </header>
 
@@ -427,9 +559,45 @@ function StudyContent() {
         )}
       </header>
 
-      <div className="flex-1 w-full max-w-6xl flex overflow-hidden">
+      {/* Staff Coaching Overlay */}
+      <div className="w-full max-w-2xl px-6 pt-4 shrink-0">
+        <AnimatePresence mode="wait">
+          {mode === 'exam' ? (
+            <motion.div
+              key="kidari-exam"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <StaffBubble 
+                staffId="kidari" 
+                message={STAFF_MESSAGES.exam.welcome[currentIdx % STAFF_MESSAGES.exam.welcome.length]} 
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="youngja-training"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <StaffBubble 
+                staffId="youngja" 
+                message={showResult 
+                  ? (isCorrect ? STAFF_MESSAGES.training.praise[0] : STAFF_MESSAGES.training.advice[0])
+                  : confidences[currentIdx] 
+                    ? "확신을 가지셨군요! 그 자신감, 결과로 이어질 거예요. ✨"
+                    : STAFF_MESSAGES.training.welcome[currentIdx % STAFF_MESSAGES.training.welcome.length]
+                } 
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="flex-1 w-full max-w-7xl flex overflow-hidden lg:px-8 lg:pb-8">
         {/* Main Focus Area */}
-        <main className="flex-1 flex flex-col p-4 md:p-8 overflow-hidden relative">
+        <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-0 overflow-hidden relative">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIdx}
@@ -443,12 +611,31 @@ function StudyContent() {
                   <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
                     <Brain size={16} />
                   </div>
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Item {currentIdx + 1} / {subject.questions.length}</span>
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">{currentQuestion.subject} | Item {currentIdx + 1} / {subject.questions.length}</span>
                 </div>
                 <h1 className="text-xl md:text-2xl font-bold leading-tight tracking-tight text-gray-100 italic">
                   "{currentQuestion.question}"
                 </h1>
               </div>
+
+              {/* Confidence Toggle (Training Mode Only) */}
+              {mode === 'training' && !showResult && (
+                <div className="shrink-0 mb-6 flex justify-end">
+                  <button 
+                    onClick={toggleConfidence}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all ${
+                      confidences[currentIdx] 
+                        ? 'bg-primary/20 border-primary text-white' 
+                        : 'bg-white/5 border-white/10 text-gray-500'
+                    }`}
+                  >
+                    <Info size={12} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      {confidences[currentIdx] ? '확신함' : '확신도 체크'}
+                    </span>
+                  </button>
+                </div>
+              )}
 
               <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
                 {currentQuestion.options.map((option, idx) => (
@@ -549,8 +736,8 @@ function StudyContent() {
 
         {/* OMR Sidebar (Exam Mode Only) */}
         {mode === 'exam' && (
-          <aside className="hidden lg:flex w-80 flex-col p-8 bg-[#09090d]/80 border-l border-white/5 overflow-hidden">
-            <div className="mb-8">
+          <aside className="hidden lg:flex w-96 flex-col p-8 bg-[#09090d]/80 border border-white/5 rounded-[40px] ml-6 overflow-hidden shadow-2xl backdrop-blur-3xl">
+            <div className="mb-8 overflow-y-auto pr-2">
               <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">OMR Protocol</h3>
               <div className="grid grid-cols-5 gap-3">
                 {subject.questions.map((_, i) => (
