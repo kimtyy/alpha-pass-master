@@ -39,35 +39,26 @@ export default function CertificationHub() {
       </div>
 
       {/* Hero / Search Section */}
-      <section className="pt-24 pb-8 px-6 relative flex flex-col items-center justify-center min-h-[40vh]">
+      <section className="pt-28 md:pt-32 pb-8 px-6 relative flex flex-col items-center justify-center min-h-[40vh]">
         <div className="max-w-4xl mx-auto text-center w-full">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest mb-6"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black uppercase tracking-widest mb-16"
           >
-            <Zap size={10} className="fill-current" />
-            Elite Intelligence OS
+            <Sparkles size={12} className="text-primary" />
+            ALPHA PASS MASTER
           </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black mb-8 tracking-tighter leading-none"
-          >
-            어떤 자격증을 <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-indigo-400 to-accent text-3xl md:text-5xl">정복할까요?</span>
-          </motion.h1>
           
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative max-w-xl mx-auto group w-full"
+            className="relative max-w-2xl mx-auto group w-full mb-12"
           >
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-indigo-500/20 rounded-3xl blur-2xl opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative flex items-center">
-              <Search className="absolute left-6 text-gray-500" size={20} />
+              <Search className="absolute left-6 text-gray-600" size={22} />
               <form 
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -77,31 +68,50 @@ export default function CertificationHub() {
               >
                 <input 
                   type="search" 
-                  placeholder="시험 명칭 입력 (예: 산업안전기사, 정보처리기사)" 
-                  className="w-full bg-[#12121a]/90 border border-white/10 rounded-[28px] py-4 px-14 text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/40 backdrop-blur-3xl transition-all placeholder:text-gray-700 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none"
+                  placeholder="Alpha Search" 
+                  className="w-full bg-[#12121a]/90 border border-white/5 rounded-[32px] py-6 px-16 text-base focus:outline-none focus:ring-1 focus:ring-white/10 backdrop-blur-3xl transition-all placeholder:text-gray-700 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none font-medium"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </form>
             </div>
           </motion.div>
+
+          {/* Shortcut Circles (Google Style) */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap justify-center gap-6 md:gap-10 px-4"
+          >
+            {allExams.slice(0, 5).map((exam) => (
+              <button
+                key={exam.id}
+                onClick={() => setSearch(exam.title)}
+                className="flex flex-col items-center gap-3 group"
+              >
+                <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-500 group-hover:bg-white/10 group-hover:text-primary transition-all duration-300 group-active:scale-90">
+                  {exam.category === 'Engineer' ? <Brain size={24} /> : <Zap size={24} />}
+                </div>
+                <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter group-hover:text-gray-300 transition-colors">
+                  {exam.title.split(' ')[0]}
+                </span>
+              </button>
+            ))}
+            <div className="flex flex-col items-center gap-3 opacity-40">
+              <div className="w-14 h-14 rounded-full border border-dashed border-white/10 flex items-center justify-center text-gray-700">
+                <Plus size={24} />
+              </div>
+              <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">
+                Add
+              </span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      <main className="w-full max-w-2xl mx-auto px-6 pb-40">
-        {/* Staff Advice Section */}
-        <div className="mb-12 space-y-4">
-          <AIAssistant 
-            staffId="kidari" 
-            message="큐넷 데이터 베이스 동기화 완료. 현재 70여 개의 종목 분석 프로토콜이 가동 중입니다. 검색하여 미션을 확인하십시오."
-            context="dashboard"
-          />
-          <AIAssistant 
-            staffId="youngja" 
-            message="수험생 여러분! 기출 한 세트만 봐도 합격 길을 디자인하는 우리 부장님의 실력, 믿음직스럽죠? 곧 모든 종목의 예쁜 해설도 도착할 거예요!"
-            context="dashboard"
-          />
-        </div>
+      <main className="w-full max-w-2xl mx-auto px-6 pb-48">
+        {/* Removed Staff Advice per Master Instruction */}
 
         {/* Modules Grid */}
         <section className="space-y-8">
@@ -187,7 +197,7 @@ export default function CertificationHub() {
                   </div>
                   
                   <div className="flex items-center justify-center w-full py-4 rounded-2xl border border-white/5 text-gray-600 text-[11px] font-black tracking-tight">
-                    키다리부장이 문제은행을 생성 중입니다...
+                    Alpha AI가 데이터베이스 분석 중입니다...
                   </div>
                 </motion.div>
               ))}

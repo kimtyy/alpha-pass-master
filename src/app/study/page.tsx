@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, Bookmark, BarChart3, Info, LayoutGrid, Trophy, RotateCcw, Home, History as HistoryIcon } from 'lucide-react';
+import { ChevronLeft, Brain, Sparkles, CheckCircle2, AlertCircle, ArrowRight, Share2, Bookmark, BarChart3, Info, LayoutGrid, Trophy, RotateCcw, Home, Clock, History as HistoryIcon } from 'lucide-react';
 import Link from 'next/link';
 import { EXAM_DATA } from '@/data/exams';
 import { useUser } from '@/hooks/useUser';
@@ -16,19 +16,19 @@ function StudyContent() {
   const subjectId = searchParams.get('id') || 'electronic-craftsman';
   const subject = EXAM_DATA[subjectId] || EXAM_DATA['electronic-craftsman'];
 
-  const [mode, setMode] = useState<'training' | 'exam' | null>(null);
+  const [mode, setMode] = useState<'exam'>('exam');
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   
   // CBT Exclusive State
   const [examAnswers, setExamAnswers] = useState<Record<number, number | null>>({});
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
+  const [isOmrOpen, setIsOmrOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes default
-  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState(true);
   const [history, setHistory] = useState<{idx: number, selected: number, isCorrect: boolean, isConfident?: boolean, timeTaken?: number}[]>([]);
-  const [confidences, setConfidences] = useState<Record<number, boolean>>({});
 
   const { status, isGuest, login } = useUser();
   const [filter, setFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
@@ -49,27 +49,38 @@ function StudyContent() {
 
   const currentQuestion = subject.questions[currentIdx];
 
-  const handleStartExam = (m: 'training' | 'exam') => {
-    setMode(m);
-    if (m === 'exam') {
-      setIsTimerActive(true);
-      // Initialize empty answers
-      const initial: Record<number, number | null> = {};
-      subject.questions.forEach((_, i) => initial[i] = null);
-      setExamAnswers(initial);
-    }
-  };
+  // Initialize exam on mount
+  React.useEffect(() => {
+    const initial: Record<number, number | null> = {};
+    subject.questions.forEach((_, i) => initial[i] = null);
+    setExamAnswers(initial);
+  }, [subjectId]);
 
   const handleSelect = (index: number) => {
-    if (showResult && mode === 'training') return;
     setSelected(index);
-    if (mode === 'exam') {
-      setExamAnswers(prev => ({ ...prev, [currentIdx]: index }));
+    setExamAnswers(prev => ({ ...prev, [currentIdx]: index }));
+    
+    // Auto-advance logic (MBTI Style)
+    if (currentIdx < subject.questions.length - 1) {
+      setTimeout(() => {
+        const nextIdx = currentIdx + 1;
+        setCurrentIdx(nextIdx);
+        // Important: Use the answer from the next question state
+        setExamAnswers(prev => {
+          setSelected(prev[nextIdx] || null);
+          return prev;
+        });
+      }, 300);
     }
   };
 
-  const toggleConfidence = () => {
-    setConfidences(prev => ({ ...prev, [currentIdx]: !prev[currentIdx] }));
+  const toggleFlag = () => {
+    setFlaggedQuestions(prev => {
+      const next = new Set(prev);
+      if (next.has(currentIdx)) next.delete(currentIdx);
+      else next.add(currentIdx);
+      return next;
+    });
   };
 
   const handleVerify = () => {
@@ -90,32 +101,7 @@ function StudyContent() {
     if (currentIdx < subject.questions.length - 1) {
       const nextIdx = currentIdx + 1;
       setCurrentIdx(nextIdx);
-      setSelected(mode === 'exam' ? examAnswers[nextIdx] : null);
-      setShowResult(false);
-    } else if (mode === 'training') {
-      // Save Training Record
-      StudyStorage.saveRecord({
-        subjectId,
-        subjectTitle: subject.title,
-        score,
-        totalQuestions: subject.questions.length,
-        isPass: score / subject.questions.length >= 0.6,
-        mode: 'training',
-        weakestSubject: weakestSubject?.name || '기타',
-        blindspots,
-        luckyStrikes,
-        subjectMastery: subjectStats
-      });
-      setIsFinished(true);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentIdx > 0) {
-      const prevIdx = currentIdx - 1;
-      setCurrentIdx(prevIdx);
-      setSelected(mode === 'exam' ? examAnswers[prevIdx] : null);
-      setShowResult(false);
+      setSelected(examAnswers[nextIdx] || null);
     }
   };
 
@@ -220,60 +206,7 @@ function StudyContent() {
   const blindspots = history.filter(h => !h.isCorrect && h.isConfident).length; // "Confident but wrong"
   const luckyStrikes = history.filter(h => h.isCorrect && !h.isConfident && mode === 'training').length; // "Unsure but right"
 
-  // 0. MODE SELECTION SCREEN
-  if (!mode && !isFinished) {
-    return (
-      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center justify-center px-6 relative overflow-hidden">
-        <div className="fixed inset-0 pointer-events-none -z-10">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-full h-[60vh] bg-primary/10 blur-[120px] rounded-full" />
-        </div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm text-center"
-        >
-          <div className="w-20 h-20 rounded-[32px] bg-white/5 border border-white/5 flex items-center justify-center mx-auto mb-8 shadow-2xl">
-            <Brain size={40} className="text-primary" />
-          </div>
-          <h1 className="text-3xl font-black mb-2 tracking-tighter">Mission Protocol</h1>
-          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] mb-12">Select Your Study Mode</p>
-
-          <div className="space-y-4">
-            <button 
-              onClick={() => handleStartExam('training')}
-              className="w-full p-6 rounded-[32px] bg-[#12121a] border border-white/5 hover:border-primary/40 transition-all text-left group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <Sparkles size={24} />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm text-gray-200">훈련 모드</h3>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5 text-balance">풀 즉시 해설 확인 가능</p>
-                </div>
-              </div>
-            </button>
-
-            <button 
-              onClick={() => handleStartExam('exam')}
-              className="w-full p-6 rounded-[32px] bg-[#12121a] border border-white/5 hover:border-accent/40 transition-all text-left group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
-                  <LayoutGrid size={24} />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm text-gray-200">실전 CBT 모드</h3>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5 text-balance">타이머 가동, 종료 후 결과 확인</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+  // Remove selection screen, always exam
 
   // 1. RESULT SCREEN
   if (isFinished) {
@@ -313,7 +246,7 @@ function StudyContent() {
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
             <div className="text-center">
-              <div className="text-[9px] font-black text-gray-600 uppercase mb-1 tracking-widest">Pass Line</div>
+              <div className="text-[9px] font-black text-gray-600 uppercase mb-1 tracking-widest">Target</div>
               <div className="text-2xl font-black text-gray-400">60%</div>
             </div>
             <div className="w-[1px] h-10 bg-white/10" />
@@ -341,57 +274,174 @@ function StudyContent() {
           </div>
 
           {/* Detailed Diagnosis UI */}
-          <div className="w-full max-w-xl mx-auto mb-16 space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            {/* Subject Mastery Card */}
-            <div className="bg-[#12121a]/80 border border-white/5 rounded-[40px] p-8 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-6">
-                  <BarChart3 size={14} className="text-primary" />
-                  <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Chapter Performance</h3>
+          <div className="w-full max-w-2xl mx-auto mb-16 space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+            {/* 1. Radar Mastery Chart (한눈에 보는 리포트) */}
+            <div className="bg-[#12121a]/80 border border-white/5 rounded-[40px] p-8 md:p-12 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[100px] rounded-full" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="flex items-center gap-2 mb-10 self-start">
+                  <LayoutGrid size={14} className="text-primary" />
+                  <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Mastery Balance Index</h3>
                 </div>
-                
-                <div className="space-y-6">
-                  {Object.entries(subjectStats).map(([sub, stat]: any) => (
-                    <div key={sub} className="space-y-2">
-                      <div className="flex justify-between items-end">
-                        <span className="text-xs font-bold text-gray-300">{sub}</span>
-                        <span className="text-[10px] font-black text-gray-500 tracking-tighter">{stat.correct} / {stat.total}</span>
+
+                {/* SVG Radar Chart */}
+                <div className="relative w-64 h-64 md:w-80 md:h-80 mb-10">
+                  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
+                    {/* Background Circles */}
+                    {[20, 40, 60, 80, 100].map(r => (
+                      <circle key={r} cx="50" cy="50" r={r/2} fill="none" stroke="white" strokeWidth="0.1" strokeOpacity="0.1" />
+                    ))}
+                    {/* Axis Lines */}
+                    {Object.keys(subjectStats).map((_, i, arr) => {
+                      const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
+                      return (
+                        <line key={i} x1="50" y1="50" x2={50 + 50 * Math.cos(angle)} y2={50 + 50 * Math.sin(angle)} stroke="white" strokeWidth="0.1" strokeOpacity="0.1" />
+                      );
+                    })}
+                    {/* Data Polygon */}
+                    <motion.polygon
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      points={Object.values(subjectStats).map((stat: any, i, arr) => {
+                        const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
+                        const r = (stat.correct / stat.total) * 45 + 5; // offset slightly from center
+                        return `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)}`;
+                      }).join(' ')}
+                      className="fill-primary/20 stroke-primary stroke-[1.5]"
+                    />
+                    {/* Data Points */}
+                    {Object.values(subjectStats).map((stat: any, i, arr) => {
+                      const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
+                      const r = (stat.correct / stat.total) * 45 + 5;
+                      return (
+                        <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" className="fill-white" />
+                      );
+                    })}
+                  </svg>
+                  
+                  {/* Subject Labels */}
+                  {Object.keys(subjectStats).map((sub, i, arr) => {
+                    const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
+                    const x = 50 + 55 * Math.cos(angle);
+                    const y = 50 + 55 * Math.sin(angle);
+                    return (
+                      <div key={sub} className="absolute text-[8px] md:text-[9px] font-black text-gray-500 uppercase whitespace-nowrap" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}>
+                        {sub}
                       </div>
-                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(stat.correct / stat.total) * 100}%` }}
-                          transition={{ duration: 1, ease: "easeOut" }}
-                          className={`h-full rounded-full ${ (stat.correct / stat.total) >= 0.6 ? 'bg-primary' : 'bg-red-500' }`}
-                        />
-                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 w-full pt-8 border-t border-white/5">
+                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+                    <div className="text-[8px] font-black text-gray-600 uppercase mb-1">Strongest</div>
+                    <div className="text-xs font-bold text-accent">
+                      {Object.entries(subjectStats).reduce((a, b: any) => (a[1].correct/a[1].total > b[1].correct/b[1].total ? a : b) as any)[0]}
                     </div>
-                  ))}
+                  </div>
+                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+                    <div className="text-[8px] font-black text-gray-600 uppercase mb-1">Critical Focus</div>
+                    <div className="text-xs font-bold text-red-400">
+                      {weakestSubject?.name || 'N/A'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* AI Staff Prescriptions */}
-            <div className="space-y-4">
-              <AIAssistant 
-                staffId="kidari" 
-                message={weakestSubject 
-                  ? `귀하의 [${weakestSubject.name}] 단원은 정답률 ${(weakestSubject.rate * 100).toFixed(0)}%로 매우 취약합니다. ${blindspots > 0 ? `특히 확신이 있었음에도 틀린 문제가 ${blindspots}건 발견되었습니다.` : ''} 이 영역의 기초 설계를 다시 검토하십시오.` 
-                  : "전반적인 데이터 밸런스가 좋습니다. 현재의 학습 질서를 유지하십시오."
-                }
-                context="exam"
-              />
-              <AIAssistant 
-                staffId="youngja" 
-                message={luckyStrikes > 0 
-                  ? `어머! 헷갈렸는데 맞힌 행운의 문제가 ${luckyStrikes}개나 되네요? ✨ 이 친구들까지 완벽히 내 것으로 만들면 합격 디자인이 완성될 거예요!` 
-                  : isPass 
-                    ? "대표님 말씀대로 아는 걸 안다고 할 때 가장 빛나는 법이죠! 완벽한 페이스예요. ^^" 
-                    : "조금 아쉽지만 단추를 다시 채우면 돼요! 영자실장이 취약 단원을 예쁘게 정리해 드릴게요."
-                }
-                context="training"
-              />
+            {/* 2. Professional Analytical Prescription (전문가용 처방전 - 쭈욱 읽게 됨) */}
+            <div className="space-y-6">
+              <div className="bg-[#12121a]/60 border border-white/5 rounded-[40px] p-8 md:p-10 backdrop-blur-2xl">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Sparkles size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Alpha Strategic Diagnosis</h4>
+                    <p className="text-[10px] text-gray-500 font-bold">AI 데이터 기반 정밀 분석 보고서</p>
+                  </div>
+                </div>
+
+                <div className="space-y-8 text-gray-300">
+                  <section>
+                    <h5 className="text-[11px] font-black text-primary uppercase mb-3 flex items-center gap-2">
+                       <CheckCircle2 size={12} />
+                       종합 성취도 판정
+                    </h5>
+                    <p className="text-[13px] leading-relaxed font-medium italic mb-2">
+                      {isPass 
+                        ? `수험생님의 현재 성취도는 [${passScore}%]로 합격 안정권에 진입했습니다. 전체 밸런스가 뛰어나며, 실전에서도 변수 없이 합격할 가능성이 90% 이상으로 분석됩니다.`
+                        : `현재 성취도는 [${passScore}%]로 합격 기준(60%)에 미달합니다. 특정 단원에서의 지식 공백이 전체 점수를 끌어내리고 있으며, 전략적인 보완이 시급한 상태입니다.`
+                      }
+                    </p>
+                    <p className="text-[13px] leading-relaxed font-medium text-gray-500">
+                      본 결과는 최근 3개년 기출 경향과 수험생님의 응시 패턴을 복합 분석한 결과입니다. 특히 단원별 데이터 편차를 고려했을 때, 다음 단계의 학습 방향이 결과에 결정적인 영향을 미칠 것입니다.
+                    </p>
+                  </section>
+
+                  <section className="p-6 rounded-3xl bg-white/[0.02] border border-white/5">
+                    <h5 className="text-[11px] font-black text-accent uppercase mb-4 flex items-center gap-2">
+                       <AlertCircle size={12} />
+                       취약 단원 정밀 분석 (Critical Zone)
+                    </h5>
+                    {weakestSubject ? (
+                      <div className="space-y-4">
+                        <p className="text-[13px] leading-relaxed font-medium">
+                          가장 보완이 시급한 영역은 **[${weakestSubject.name}]** 단원입니다. 
+                          해당 영역의 정답률인 ${(weakestSubject.rate * 100).toFixed(0)}%는 전체 평균에 비해 현저히 낮으며, 이는 기본 개념의 구조화가 부족함을 의미합니다.
+                        </p>
+                        <ul className="space-y-2">
+                          <li className="flex gap-2 text-[12px] font-medium text-gray-400 italic">
+                             <div className="mt-1.5 w-1 h-1 rounded-full bg-accent shrink-0" />
+                             해당 단원의 핵심 키워드 중심 재개념화 필요
+                          </li>
+                          <li className="flex gap-2 text-[12px] font-medium text-gray-400 italic">
+                             <div className="mt-1.5 w-1 h-1 rounded-full bg-accent shrink-0" />
+                             최근 출제 빈도가 높은 응용 문제 풀이 권장
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">전반적인 단원 밸런스가 양호하며, 치명적인 약점은 발견되지 않았습니다.</p>
+                    )}
+                  </section>
+
+                  <section>
+                    <h5 className="text-[11px] font-black text-gray-500 uppercase mb-3">메타인지적 맹점 (Blindspots)</h5>
+                    <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10">
+                      <p className="text-[12px] font-medium leading-relaxed text-red-200/60">
+                        {blindspots > 0 
+                          ? `검토(Flag)하지 않았으나 틀린 문제가 ${blindspots}문항 발견되었습니다. 이는 자신이 알고 있다는 착각(Metacognitive Blindspot)이 발생하는 영역으로, 실제 시험에서 가장 주의해야 할 리스크 요소입니다.`
+                          : "맹점 문항이 발견되지 않았습니다. 자신의 실력을 정확히 파악하고 응시하고 계십니다."
+                        }
+                      </p>
+                    </div>
+                  </section>
+
+                  <div className="pt-6 border-t border-white/5">
+                     <p className="text-[11px] font-bold text-gray-600 text-center uppercase tracking-widest">
+                       Alpha Pass Master AI Intelligence Diagnostic System
+                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step back to specific chapter breakdown if needed */}
+              <div className="bg-[#12121a]/40 border border-white/5 rounded-[40px] p-8 hidden md:block">
+                 <div className="flex items-center gap-2 mb-6">
+                    <BarChart3 size={14} className="text-gray-500" />
+                    <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Chapter Data Breakdown</h3>
+                 </div>
+                 <div className="space-y-4">
+                    {Object.entries(subjectStats).map(([sub, stat]: any) => (
+                      <div key={sub} className="flex justify-between items-center text-[11px] font-bold text-gray-500 px-2">
+                        <span>{sub}</span>
+                        <span>{stat.correct} / {stat.total}</span>
+                      </div>
+                    ))}
+                 </div>
+              </div>
             </div>
           </div>
         </header>
@@ -533,67 +583,32 @@ function StudyContent() {
         <div className="absolute top-0 left-1/4 w-full h-1/2 bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
-      {/* CBT Header */}
-      <header className="w-full max-w-2xl px-5 py-4 flex justify-between items-center bg-[#09090d]/80 backdrop-blur-xl border-b border-white/5 z-50 shrink-0">
+      {/* CBT Header: Slimmed */}
+      <header className="w-full max-w-2xl px-5 pt-10 pb-4 flex justify-between items-center bg-[#09090d]/80 backdrop-blur-xl border-b border-white/5 z-50 shrink-0">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard" className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+          <Link href="/dashboard" className="p-2 rounded-xl bg-white/5 border border-white/10">
             <ChevronLeft size={16} />
           </Link>
           <div className="flex flex-col">
-            <h2 className="text-[12px] font-black truncate max-w-[140px] tracking-tight leading-none mb-1">{subject.title}</h2>
-            <div className="flex items-center gap-2">
-              <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${mode === 'exam' ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'}`}>
-                {mode === 'exam' ? 'Exam Protocol' : 'Training Protocol'}
-              </span>
-            </div>
+            <h2 className="text-[12px] font-black tracking-tight leading-none">{subject.title}</h2>
           </div>
         </div>
 
-        {mode === 'exam' && (
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setIsOmrOpen(true)}
+            className="lg:hidden p-2 rounded-xl bg-primary/10 border border-primary/20 text-primary active:scale-95 transition-all"
+          >
+            <LayoutGrid size={16} />
+          </button>
           <div className="flex flex-col items-end">
-            <div className="flex items-center gap-2 text-red-400">
-              <BarChart3 size={14} />
-              <span className="text-base font-black tracking-widest tabular-nums">{formatTime(timeLeft)}</span>
+            <div className="flex items-center gap-2 text-red-500/80">
+              <Clock size={12} />
+              <span className="text-sm font-black tracking-widest tabular-nums">{formatTime(timeLeft)}</span>
             </div>
           </div>
-        )}
+        </div>
       </header>
-
-      {/* Staff Coaching Overlay */}
-      <div className="w-full max-w-2xl px-6 pt-4 shrink-0">
-        <AnimatePresence mode="wait">
-          {mode === 'exam' ? (
-            <motion.div
-              key="kidari-exam"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <StaffBubble 
-                staffId="kidari" 
-                message={STAFF_MESSAGES.exam.welcome[currentIdx % STAFF_MESSAGES.exam.welcome.length]} 
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="youngja-training"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <StaffBubble 
-                staffId="youngja" 
-                message={showResult 
-                  ? (isCorrect ? STAFF_MESSAGES.training.praise[0] : STAFF_MESSAGES.training.advice[0])
-                  : confidences[currentIdx] 
-                    ? "확신을 가지셨군요! 그 자신감, 결과로 이어질 거예요. ✨"
-                    : STAFF_MESSAGES.training.welcome[currentIdx % STAFF_MESSAGES.training.welcome.length]
-                } 
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       <div className="flex-1 w-full max-w-7xl flex overflow-hidden lg:px-8 lg:pb-8">
         {/* Main Focus Area */}
@@ -606,36 +621,26 @@ function StudyContent() {
               exit={{ opacity: 0, x: -20 }}
               className="flex-1 flex flex-col relative bg-[#12121a]/60 border border-white/5 rounded-[40px] p-8 md:p-12 backdrop-blur-3xl shadow-2xl overflow-hidden"
             >
-              <div className="shrink-0 mb-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
-                    <Brain size={16} />
+              <div className="shrink-0 mb-6 flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Item {currentIdx + 1} / {subject.questions.length}</span>
                   </div>
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">{currentQuestion.subject} | Item {currentIdx + 1} / {subject.questions.length}</span>
+                  <h1 className="text-lg md:text-xl font-bold leading-tight tracking-tight text-gray-200">
+                    {currentQuestion.question}
+                  </h1>
                 </div>
-                <h1 className="text-xl md:text-2xl font-bold leading-tight tracking-tight text-gray-100 italic">
-                  "{currentQuestion.question}"
-                </h1>
+                <button 
+                  onClick={toggleFlag}
+                  className={`p-3 rounded-2xl border transition-all active:scale-90 ml-4 ${
+                    flaggedQuestions.has(currentIdx) 
+                      ? 'bg-accent/20 border-accent text-accent' 
+                      : 'bg-white/5 border-white/5 text-gray-700'
+                  }`}
+                >
+                  <Bookmark size={18} fill={flaggedQuestions.has(currentIdx) ? "currentColor" : "none"} />
+                </button>
               </div>
-
-              {/* Confidence Toggle (Training Mode Only) */}
-              {mode === 'training' && !showResult && (
-                <div className="shrink-0 mb-6 flex justify-end">
-                  <button 
-                    onClick={toggleConfidence}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all ${
-                      confidences[currentIdx] 
-                        ? 'bg-primary/20 border-primary text-white' 
-                        : 'bg-white/5 border-white/10 text-gray-500'
-                    }`}
-                  >
-                    <Info size={12} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">
-                      {confidences[currentIdx] ? '확신함' : '확신도 체크'}
-                    </span>
-                  </button>
-                </div>
-              )}
 
               <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
                 {currentQuestion.options.map((option, idx) => (
@@ -643,114 +648,123 @@ function StudyContent() {
                     key={idx}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSelect(idx)}
-                    className={`w-full text-left p-6 rounded-[28px] border-2 transition-all duration-300 relative group ${
+                    className={`w-full text-left p-5 rounded-3xl border-2 transition-all duration-200 relative ${
                       selected === idx 
-                        ? 'bg-primary/20 border-primary shadow-lg shadow-primary/10' 
-                        : 'bg-white/5 border-white/5 hover:border-white/10'
-                    } ${showResult && mode === 'training' && idx === currentQuestion.answer ? 'border-accent/40 bg-accent/5' : ''} 
-                      ${showResult && mode === 'training' && selected === idx && idx !== currentQuestion.answer ? 'border-red-500/40 bg-red-500/5' : ''}`}
+                        ? 'bg-white/10 border-white/20' 
+                        : 'bg-white/[0.02] border-white/5'
+                    }`}
                   >
-                    <div className="flex items-center gap-5 relative z-10">
-                      <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-black border transition-all ${
-                        selected === idx ? 'bg-primary border-primary text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-700'
+                    <div className="flex items-center gap-4 relative z-10">
+                      <span className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-black border transition-all ${
+                        selected === idx ? 'bg-white border-white text-black' : 'bg-white/5 border-white/10 text-gray-600'
                       }`}>
                         {idx + 1}
                       </span>
-                      <span className={`text-[15px] font-medium leading-snug ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
+                      <span className={`text-[14px] font-medium leading-snug ${selected === idx ? 'text-white' : 'text-gray-400'}`}>
                         {option}
                       </span>
                     </div>
                   </motion.button>
                 ))}
-
-                <AnimatePresence>
-                  {showResult && mode === 'training' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="mt-6 p-8 rounded-[40px] bg-white/[0.02] border border-white/5 shadow-2xl"
-                    >
-                      <div className={`flex items-center gap-2 mb-4 ${isCorrect ? 'text-accent' : 'text-red-400'}`}>
-                        {isCorrect ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
-                        <span className="text-xs font-black px-3 py-1 rounded-full bg-black/40 border border-white/10 tracking-widest uppercase">
-                          {isCorrect ? 'Elite Accurate' : 'Analysis Required'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-300 mb-8 italic font-medium leading-relaxed">
-                        {isCorrect ? currentQuestion.diagnostic.correct : currentQuestion.diagnostic.incorrect}
-                      </p>
-                      <div className="pt-8 border-t border-white/5 space-y-4">
-                        <div className="flex items-center gap-2 text-primary">
-                          <Brain size={16} />
-                          <span className="text-[10px] font-black uppercase tracking-widest">Master Insights</span>
-                        </div>
-                        <div className="text-sm text-gray-400 leading-relaxed font-medium p-6 rounded-3xl bg-black/40 border border-white/5 italic">
-                          {currentQuestion.explanation}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
 
               {/* Navigation Footer */}
-              <div className="mt-10 shrink-0 flex gap-4">
-                {mode === 'training' ? (
-                  !showResult ? (
-                    <button
-                      onClick={handleVerify}
-                      disabled={selected === null}
-                      className={`flex-1 py-6 rounded-3xl font-black text-base flex items-center justify-center gap-3 transition-all ${
-                        selected !== null 
-                          ? 'bg-primary text-white shadow-2xl active:scale-95' 
-                          : 'bg-white/5 text-gray-700 cursor-not-allowed'
-                      }`}
-                    >
-                      <Sparkles size={20} />
-                      지능형 분석 가동
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleNext}
-                      className="flex-1 py-6 rounded-3xl bg-white text-black font-black text-base flex items-center justify-center gap-3 shadow-2xl active:scale-95 group"
-                    >
-                      {currentIdx < subject.questions.length - 1 ? 'Next Sequence' : 'Finish Mission'}
-                      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  )
-                ) : (
-                  <>
-                    <button onClick={handlePrev} disabled={currentIdx === 0} className="px-8 py-6 rounded-3xl bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-30 active:scale-95 transition-all">
-                      <ChevronLeft size={24} />
-                    </button>
-                    <button onClick={handleNext} className="flex-1 py-6 rounded-3xl bg-[#1a1a20] border border-white/5 text-white font-black text-base shadow-xl active:scale-95 flex items-center justify-center gap-3">
-                      {currentIdx < subject.questions.length - 1 ? 'Next Phase' : 'Check Submission'}
-                      <ArrowRight size={20} />
-                    </button>
-                  </>
-                )}
+              <div className="mt-10 mb-8 shrink-0 flex gap-4">
+                <button onClick={() => {
+                  if (currentIdx > 0) {
+                    const next = currentIdx - 1;
+                    setCurrentIdx(next);
+                    setSelected(examAnswers[next] || null);
+                  }
+                }} disabled={currentIdx === 0} className="px-8 py-6 rounded-3xl bg-white/5 border border-white/10 text-gray-500 hover:text-white disabled:opacity-30 active:scale-95 transition-all">
+                  <ChevronLeft size={24} />
+                </button>
+                <button onClick={handleNext} className="flex-1 py-6 rounded-3xl bg-[#1a1a20] border border-white/5 text-white font-black text-base shadow-xl active:scale-95 flex items-center justify-center gap-3">
+                  {currentIdx < subject.questions.length - 1 ? 'Next Item' : 'Review & Submit'}
+                  <ArrowRight size={20} />
+                </button>
               </div>
             </motion.div>
           </AnimatePresence>
         </main>
 
-        {/* OMR Sidebar (Exam Mode Only) */}
-        {mode === 'exam' && (
-          <aside className="hidden lg:flex w-96 flex-col p-8 bg-[#09090d]/80 border border-white/5 rounded-[40px] ml-6 overflow-hidden shadow-2xl backdrop-blur-3xl">
-            <div className="mb-8 overflow-y-auto pr-2">
-              <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">OMR Protocol</h3>
-              <div className="grid grid-cols-5 gap-3">
+        {/* Desktop OMR Sidebar */}
+        <aside className="hidden lg:flex w-96 flex-col p-8 bg-[#09090d]/80 border border-white/5 rounded-[40px] ml-6 overflow-hidden shadow-2xl backdrop-blur-3xl">
+          <div className="mb-8 overflow-y-auto pr-2">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Exam Tracker</h3>
+            <div className="grid grid-cols-5 gap-3">
+              {subject.questions.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setCurrentIdx(i);
+                    setSelected(examAnswers[i]);
+                  }}
+                  className={`h-10 rounded-xl flex items-center justify-center text-[10px] font-black transition-all border ${
+                    currentIdx === i ? 'bg-primary border-primary text-white shadow-lg' : 
+                    flaggedQuestions.has(i) ? 'bg-accent/20 border-accent/40 text-accent' :
+                    examAnswers[i] !== null ? 'bg-white/10 border-white/20 text-gray-300' : 
+                    'bg-white/5 border-white/5 text-gray-600'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-auto space-y-4">
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex justify-between items-center">
+              <div>
+                <div className="text-[9px] font-black text-gray-600 uppercase mb-1">Answered</div>
+                <div className="text-xl font-black text-white">{Object.values(examAnswers).filter(v => v !== null).length} / {subject.questions.length}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[9px] font-black text-accent uppercase mb-1">Flagged</div>
+                <div className="text-xl font-black text-accent">{flaggedQuestions.size}</div>
+              </div>
+            </div>
+            <button 
+              onClick={handleFinalSubmit}
+              className="w-full py-5 rounded-3xl bg-white text-black font-black flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all shadow-xl"
+            >
+              <CheckCircle2 size={20} />
+              SUBMIT PROTOCOL
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      {/* Mobile OMR Drawer */}
+      <AnimatePresence>
+        {isOmrOpen && (
+          <motion.div 
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[100] bg-[#060608] flex flex-col"
+          >
+            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#09090d]">
+              <h3 className="text-[12px] font-black uppercase tracking-widest text-gray-500">Exam Navigator</h3>
+              <button onClick={() => setIsOmrOpen(false)} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase">Close</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-5 gap-4">
                 {subject.questions.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => {
                       setCurrentIdx(i);
                       setSelected(examAnswers[i]);
+                      setIsOmrOpen(false);
                     }}
-                    className={`h-10 rounded-xl flex items-center justify-center text-[10px] font-black transition-all border ${
-                      currentIdx === i ? 'bg-primary border-primary text-white' : 
-                      examAnswers[i] !== null ? 'bg-accent/10 border-accent/30 text-accent' : 
-                      'bg-white/5 border-white/5 text-gray-600'
+                    className={`h-14 rounded-2xl flex items-center justify-center text-xs font-black transition-all border ${
+                      currentIdx === i ? 'bg-primary border-primary text-white shadow-lg scale-110' : 
+                      flaggedQuestions.has(i) ? 'bg-accent/20 border-accent/40 text-accent' :
+                      examAnswers[i] !== null ? 'bg-white/10 border-white/20 text-gray-300' : 
+                      'bg-white/5 border-white/5 text-gray-700'
                     }`}
                   >
                     {i + 1}
@@ -759,35 +773,30 @@ function StudyContent() {
               </div>
             </div>
 
-            <div className="mt-auto space-y-4">
-              <div className="p-5 rounded-2xl bg-white/5 border border-white/5">
-                <div className="text-[9px] font-black text-gray-600 uppercase mb-2">Completion</div>
-                <div className="text-xl font-black text-white">{Object.values(examAnswers).filter(v => v !== null).length} / {subject.questions.length}</div>
+            <div className="p-8 border-t border-white/5 bg-[#09090d]">
+              <div className="flex justify-between items-end mb-8 px-2">
+                 <div>
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest block mb-1">Remaining</span>
+                    <span className="text-3xl font-black text-white">{subject.questions.length - Object.values(examAnswers).filter(v => v !== null).length}문항</span>
+                 </div>
+                 <div className="text-right">
+                    <span className="text-[10px] font-black text-accent uppercase tracking-widest block mb-1">Total Flagged</span>
+                    <span className="text-3xl font-black text-accent">{flaggedQuestions.size}</span>
+                 </div>
               </div>
               <button 
-                onClick={handleFinalSubmit}
-                className="w-full py-5 rounded-3xl bg-accent text-black font-black flex items-center justify-center gap-2 hover:bg-white transition-all shadow-xl shadow-accent/20"
+                onClick={() => {
+                  setIsOmrOpen(false);
+                  handleFinalSubmit();
+                }}
+                className="w-full py-6 rounded-[32px] bg-white text-black font-black text-lg shadow-2xl active:scale-95 transition-all"
               >
-                <CheckCircle2 size={20} />
-                MISSION SUBMIT
+                FINAL SUBMIT
               </button>
             </div>
-          </aside>
+          </motion.div>
         )}
-      </div>
-
-      {/* Floating Action for Mobile Exam */}
-      {mode === 'exam' && (
-        <div className="lg:hidden fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-6">
-          <button 
-            onClick={handleFinalSubmit}
-            className="w-full py-6 rounded-[32px] bg-accent text-black font-black shadow-2xl shadow-accent/30 shadow-black/80 flex items-center justify-center gap-3 active:scale-95"
-          >
-            <HistoryIcon size={20} className="fill-current" />
-            FINAL SUBMIT MISSION
-          </button>
-        </div>
-      )}
+      </AnimatePresence>
     </div>
   );
 }

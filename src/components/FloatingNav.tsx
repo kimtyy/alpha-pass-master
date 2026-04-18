@@ -12,7 +12,7 @@ export function FloatingNav() {
   const { isPremium, isLoaded } = useUser();
 
   // Hide on study page to maintain focus
-  if (pathname === '/study') return null;
+  if (pathname?.startsWith('/study')) return null;
 
   const navItems = [
     { icon: Search, label: 'Explore', href: '/dashboard' },

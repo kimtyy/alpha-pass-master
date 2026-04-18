@@ -43,12 +43,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ staffId, message, cont
 
         {/* Message Area */}
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{staff.title}</span>
-            <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase border ${
-              staff.role === 'dev' ? 'bg-blue-500/10 text-blue-400 border-blue-500/10' : 'bg-purple-500/10 text-purple-400 border-purple-500/10'
-            }`}>
-              {staff.name}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em] flex items-center gap-1.5">
+              <Zap size={10} className="fill-current" />
+              Alpha Intelligence Guidance
             </span>
           </div>
           <p className="text-[13px] font-medium leading-relaxed text-gray-200 italic">
