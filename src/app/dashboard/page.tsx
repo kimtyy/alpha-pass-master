@@ -77,36 +77,33 @@ export default function CertificationHub() {
             </div>
           </motion.div>
 
-          {/* Shortcut Circles (Google Style) */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-6 md:gap-10 px-4"
-          >
-            {allExams.slice(0, 5).map((exam) => (
-              <button
-                key={exam.id}
-                onClick={() => setSearch(exam.title)}
-                className="flex flex-col items-center gap-3 group"
+          {/* Shortcut Circles: Conditional Visibility (Hide when searching) */}
+          <AnimatePresence>
+            {search.length === 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap justify-center gap-6 md:gap-10 px-4"
               >
-                <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-500 group-hover:bg-white/10 group-hover:text-primary transition-all duration-300 group-active:scale-90">
-                  {exam.category === 'Engineer' ? <Brain size={24} /> : <Zap size={24} />}
-                </div>
-                <span className="text-[10px] font-black text-gray-600 uppercase tracking-tighter group-hover:text-gray-300 transition-colors">
-                  {exam.title.split(' ')[0]}
-                </span>
-              </button>
-            ))}
-            <div className="flex flex-col items-center gap-3 opacity-40">
-              <div className="w-14 h-14 rounded-full border border-dashed border-white/10 flex items-center justify-center text-gray-700">
-                <Plus size={24} />
-              </div>
-              <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">
-                Add
-              </span>
-            </div>
-          </motion.div>
+                {allExams.slice(0, 5).map((exam) => (
+                  <button
+                    key={exam.id}
+                    onClick={() => setSearch(exam.title)}
+                    className="flex flex-col items-center gap-3 group"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-500 group-hover:bg-white/10 group-hover:text-primary transition-all duration-300 group-active:scale-90 shadow-lg">
+                      {exam.category === 'Engineer' ? <Brain size={24} /> : <Zap size={24} />}
+                    </div>
+                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
+                      {exam.title.split(' ')[0]}
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
@@ -128,38 +125,40 @@ export default function CertificationHub() {
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.98 }}
-                    className="group relative bg-[#09090b]/40 border border-white/5 rounded-[40px] p-8 hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
+                    className="group relative bg-[#12121a]/80 border-2 border-white/5 rounded-[40px] p-8 md:p-10 hover:border-primary/20 transition-all duration-500 shadow-2xl backdrop-blur-3xl overflow-hidden"
                   >
-                    <div className="absolute top-6 right-8">
-                      <span className="px-2 py-0.5 rounded-md bg-accent/10 text-[7px] text-accent font-black uppercase tracking-tighter border border-accent/10">
-                        AI Bank Ready
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-start mb-10">
+                    {/* Decorative Accent */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[60px] rounded-full pointer-events-none" />
+                    
+                    <div className="flex justify-between items-start mb-12 relative z-10">
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2 py-0.5 rounded-md bg-primary/10 text-[8px] text-primary font-black uppercase tracking-tighter border border-primary/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="px-3 py-1 rounded-full bg-primary/10 text-[9px] text-primary font-black uppercase tracking-widest border border-primary/10">
                             {exam.category}
                           </span>
+                          <span className="px-3 py-1 rounded-full bg-green-500/10 text-[9px] text-green-500 font-black uppercase tracking-widest border border-green-500/10 flex items-center gap-1.5">
+                            <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                            AI Bank Ready
+                          </span>
                         </div>
-                        <h3 className="text-xl font-bold tracking-tighter text-gray-100">
+                        <h3 className="text-2xl md:text-3xl font-black tracking-tighter text-white leading-tight">
                           {exam.title}
                         </h3>
                       </div>
-                      <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-gray-600 group-hover:text-primary transition-colors">
-                        {exam.category === 'Engineer' ? <Brain size={20} /> : <Zap size={20} />}
+                      <div className="w-14 h-14 rounded-[24px] bg-white/5 border border-white/5 flex items-center justify-center text-gray-500 group-hover:text-primary group-hover:bg-primary/10 transition-all duration-500">
+                        {exam.category === 'Engineer' ? <Brain size={28} /> : <Zap size={28} />}
                       </div>
                     </div>
 
                     <Link 
                       href={`/study?id=${exam.id}`} 
-                      className="flex items-center justify-center w-full py-5 rounded-3xl bg-white text-black font-black hover:bg-primary hover:text-white transition-all duration-300 shadow-xl group/btn active:scale-95"
+                      className="flex items-center justify-center w-full py-6 rounded-[32px] bg-white text-black font-black hover:bg-primary hover:text-white transition-all duration-500 shadow-2xl group/btn active:scale-95"
                     >
-                      <span className="text-sm flex items-center gap-2">
-                        <GraduationCap size={18} />
+                      <span className="text-base flex items-center gap-3">
+                        <GraduationCap size={20} />
                         무료 모의고사 시작
                       </span>
-                      <ChevronRight size={18} className="ml-0.5 group-hover/btn:translate-x-1 transition-transform" />
+                      <ChevronRight size={20} className="ml-1 group-hover/btn:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
                 ))}
@@ -171,32 +170,27 @@ export default function CertificationHub() {
                     layout
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="group relative bg-white/[0.01] border border-white/5 rounded-[40px] p-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                    className="group relative bg-white/[0.02] border border-white/5 rounded-[40px] p-8 md:p-10 opacity-70 hover:opacity-100 transition-all duration-500 backdrop-blur-sm"
                   >
-                    <div className="absolute top-6 right-8">
-                      <span className="px-2 py-0.5 rounded-md bg-white/5 text-[7px] text-gray-500 font-black uppercase tracking-tighter border border-white/5">
-                        Analyzing Protocol
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-start mb-8">
+                    <div className="flex justify-between items-start mb-10">
                       <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2 py-0.5 rounded-md bg-white/5 text-[8px] text-gray-500 font-black uppercase tracking-tighter border border-white/5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="px-3 py-1 rounded-full bg-white/5 text-[9px] text-gray-500 font-black uppercase tracking-widest border border-white/5">
                             {cert.category}
                           </span>
-                          <span className="text-[9px] text-gray-700 font-bold">{cert.field}</span>
+                          <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">{cert.field}</span>
                         </div>
-                        <h3 className="text-lg font-bold tracking-tighter text-gray-400">
+                        <h3 className="text-xl md:text-2xl font-black tracking-tighter text-gray-400">
                           {cert.name}
                         </h3>
                       </div>
-                      <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-gray-800">
-                        <Clock size={18} />
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-gray-700">
+                        <Clock size={20} />
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-center w-full py-4 rounded-2xl border border-white/5 text-gray-600 text-[11px] font-black tracking-tight">
-                      Alpha AI가 데이터베이스 분석 중입니다...
+                    <div className="flex items-center justify-center w-full py-5 rounded-[28px] border border-white/5 text-gray-600 text-[11px] font-black tracking-widest uppercase bg-black/20">
+                      Analyzing Database Pattern...
                     </div>
                   </motion.div>
                 ))}
