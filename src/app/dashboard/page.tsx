@@ -62,13 +62,13 @@ export default function CertificationHub() {
       </div>
 
       {/* Hero / Search Section */}
-      <section className="pt-10 md:pt-14 pb-6 px-6 relative flex flex-col items-center justify-center">
+      <section className="pt-4 md:pt-10 pb-4 px-6 relative flex flex-col items-center justify-center">
         <div className="max-w-4xl mx-auto text-center w-full">
           {/* Logo Section */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center mb-12"
+            className="flex flex-col items-center mb-6"
           >
             <div className="flex items-center gap-3 mb-2">
               <Sparkles size={24} className="text-primary animate-pulse" />
@@ -86,7 +86,7 @@ export default function CertificationHub() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative max-w-2xl mx-auto group w-full mb-8"
+            className="relative max-w-2xl mx-auto group w-full mb-4"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-500/10 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition duration-1000"></div>
             <div className="relative flex items-center">
@@ -101,7 +101,7 @@ export default function CertificationHub() {
                 <input 
                   type="search" 
                   placeholder="Alpha Search" 
-                  className="w-full bg-[#12121a]/95 border-2 border-white/5 rounded-[32px] py-6 px-16 text-lg md:text-xl font-black focus:outline-none focus:border-primary/30 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none tracking-tight text-center"
+                  className="w-full bg-[#12121a]/95 border-2 border-white/5 rounded-[32px] py-4 px-16 text-lg md:text-xl font-black focus:outline-none focus:border-primary/30 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none tracking-tight text-center"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -117,9 +117,9 @@ export default function CertificationHub() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="max-w-2xl mx-auto mb-10"
+                className="max-w-2xl mx-auto mb-4"
               >
-                <div className="flex items-center gap-4 px-6 py-4 rounded-3xl bg-primary/5 border border-primary/10 backdrop-blur-xl">
+                <div className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-primary/5 border border-primary/10 backdrop-blur-xl">
                   <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0 animate-pulse">
                     <AlertCircle size={20} />
                   </div>
@@ -146,7 +146,7 @@ export default function CertificationHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="grid grid-cols-3 gap-y-10 gap-x-6 md:flex md:flex-wrap md:justify-center md:gap-10 px-6"
+                className="grid grid-cols-3 gap-y-6 gap-x-6 md:flex md:flex-wrap md:justify-center md:gap-10 px-6"
               >
                 {shortcutExams.map((exam) => (
                   <button
