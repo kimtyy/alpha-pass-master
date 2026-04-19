@@ -112,10 +112,13 @@ function StudyContent() {
   };
 
   const handleNext = () => {
-    if (currentIdx < subject.questions.length - 1) {
+    if (currentIdx < shuffledQuestions.length - 1) {
       const nextIdx = currentIdx + 1;
       setCurrentIdx(nextIdx);
       setSelected(examAnswers[nextIdx] || null);
+    } else {
+      // Last question: Open OMR for Final Submission
+      setIsOmrOpen(true);
     }
   };
 
