@@ -109,6 +109,35 @@ export default function CertificationHub() {
             </div>
           </motion.div>
 
+          {/* Shortcut Circles */}
+          <AnimatePresence>
+            {!search && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="grid grid-cols-3 gap-y-6 gap-x-6 md:flex md:flex-wrap md:justify-center md:gap-10 px-6 mb-8"
+              >
+                {shortcutExams.map((exam) => (
+                  <button
+                    key={exam.id}
+                    onClick={() => setSearch(exam.title)}
+                    className="flex flex-col items-center gap-3 group px-4 py-2 rounded-3xl hover:bg-white/[0.02] transition-colors"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-white/30 group-hover:bg-primary/10 group-hover:border-primary/20 group-hover:text-primary transition-all duration-500 group-active:scale-95 relative">
+                      <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 blur-xl transition-opacity" />
+                      <div className="relative z-10">{getExamIcon(exam.id, exam.category)}</div>
+                    </div>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] group-hover:text-white transition-colors text-center w-20 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {exam.title.split(' ')[0]}
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Market Intelligence Alert (Alpha Scout) */}
           <AnimatePresence mode="wait">
             {!search && (
@@ -117,7 +146,7 @@ export default function CertificationHub() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="max-w-2xl mx-auto mb-4"
+                className="max-w-2xl mx-auto"
               >
                 <div className="premium-glass flex items-center gap-4 px-5 py-3 rounded-[24px]">
                   <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0 relative">
@@ -138,35 +167,6 @@ export default function CertificationHub() {
                     </p>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Shortcut Circles */}
-          <AnimatePresence>
-            {!search && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="grid grid-cols-3 gap-y-6 gap-x-6 md:flex md:flex-wrap md:justify-center md:gap-10 px-6"
-              >
-                {shortcutExams.map((exam) => (
-                  <button
-                    key={exam.id}
-                    onClick={() => setSearch(exam.title)}
-                    className="flex flex-col items-center gap-3 group px-4 py-2 rounded-3xl hover:bg-white/[0.02] transition-colors"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-white/30 group-hover:bg-primary/10 group-hover:border-primary/20 group-hover:text-primary transition-all duration-500 group-active:scale-95 relative">
-                      <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 blur-xl transition-opacity" />
-                      <div className="relative z-10">{getExamIcon(exam.id, exam.category)}</div>
-                    </div>
-                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.2em] group-hover:text-white transition-colors text-center w-20 overflow-hidden text-ellipsis whitespace-nowrap">
-                      {exam.title.split(' ')[0]}
-                    </span>
-                  </button>
-                ))}
               </motion.div>
             )}
           </AnimatePresence>
