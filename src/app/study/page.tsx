@@ -50,15 +50,29 @@ function StudyContent() {
 
   // Initialize exam and Shuffle on mount
   React.useEffect(() => {
-    // Fish-Yates Shuffle
-    const questions = [...subject.questions];
-    for (let i = questions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [questions[i], questions[j]] = [questions[j], questions[i]];
-    }
+    // 층화 무작위 추출 (Stratified Random Sampling)
+    // 1. 과목별로 그룹화
+    const questionPool = subject.questions;
+    const subjectsInPool = Array.from(new Set(questionPool.map(q => q.subject)));
+    const sampledPool: any[] = [];
+
+    // 2. 각 과목별 추출 수 결정 (기본값 설정)
+    // 기사급(Engineer)은 5과목 각 20문제, 산업준문가(Professional)는 40문제씩 등
+    const targetPerSubject = subject.questions.length > 60 ? (subject.category === 'Professional' ? 40 : 20) : 20;
+
+    subjectsInPool.forEach(subName => {
+      const subGroup = questionPool.filter(q => q.subject === subName);
+      // 과목 내 무작위 셔플
+      const shuffledSub = [...subGroup].sort(() => Math.random() - 0.5);
+      // 목표 수만큼 추출 (부족하면 있는 만큼만)
+      sampledPool.push(...shuffledSub.slice(0, targetPerSubject));
+    });
+
+    // 3. 최종 추출된 문항들을 전체 셔플
+    const finalQuestions = sampledPool.sort(() => Math.random() - 0.5);
     
     // Add original index for tracking if needed
-    const shuffled = questions.map((q, i) => ({ ...q, originalIdx: i }));
+    const shuffled = finalQuestions.map((q, i) => ({ ...q, originalIdx: i }));
     setShuffledQuestions(shuffled);
     
     const initial: Record<number, number | null> = {};

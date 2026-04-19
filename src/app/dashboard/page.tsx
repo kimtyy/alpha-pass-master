@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Search, BookOpen, GraduationCap, ChevronRight, Plus, Star, Filter, LayoutGrid, Clock, Calendar, Zap, Brain, Sparkles } from 'lucide-react';
+import { Search, BookOpen, GraduationCap, ChevronRight, Plus, Star, Filter, LayoutGrid, Clock, Calendar, Zap, Brain, Sparkles, ShieldCheck, Home, UtensilsCrossed, PencilRuler, Code, Construction } from 'lucide-react';
 import { EXAM_DATA } from '@/data/exams';
 import { CERTIFICATE_LIST } from '@/data/certificates';
 import { AIAssistant } from '@/components/AIAssistant';
@@ -29,6 +29,27 @@ export default function CertificationHub() {
     const matchesCategory = activeCategory === 'All' || cert.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const getExamIcon = (id: string, category: string) => {
+    if (id.includes('safety')) return <ShieldCheck size={24} />;
+    if (id.includes('real-estate')) return <Home size={24} />;
+    if (id.includes('cook')) return <UtensilsCrossed size={24} />;
+    if (id.includes('architectural')) return <PencilRuler size={24} />;
+    if (id.includes('info-processing')) return <Code size={24} />;
+    if (id.includes('electric')) return <Zap size={24} />;
+    if (category === 'Engineer') return <Construction size={24} />;
+    return <Zap size={24} />;
+  };
+
+  // Select core subjects for shortcuts
+  const shortcutExams = [
+    'industrial-safety-engineer',
+    'real-estate-agent',
+    'info-processing-engineer',
+    'cook-korean-craftsman',
+    'architectural-craftsman',
+    'electric-engineer'
+  ].map(id => EXAM_DATA[id]).filter(Boolean);
 
   return (
     <div className="min-h-screen bg-[#060608] text-white selection:bg-primary/30 pb-28 overflow-x-hidden">
@@ -87,16 +108,17 @@ export default function CertificationHub() {
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="flex flex-wrap justify-center gap-6 md:gap-10 px-4"
               >
-                {allExams.slice(0, 5).map((exam) => (
+                {shortcutExams.map((exam) => (
                   <button
                     key={exam.id}
                     onClick={() => setSearch(exam.title)}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-500 group-hover:bg-white/10 group-hover:text-primary transition-all duration-300 group-active:scale-90 shadow-2xl">
-                      {exam.category === 'Engineer' ? <Brain size={24} /> : <Zap size={24} />}
+                    <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:text-primary transition-all duration-300 group-active:scale-95 shadow-2xl relative overflow-hidden">
+                      <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {getExamIcon(exam.id, exam.category)}
                     </div>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
+                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
                       {exam.title.split(' ')[0]}
                     </span>
                   </button>
