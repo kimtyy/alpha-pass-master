@@ -1,4 +1,4 @@
-export type StaffRole = 'dev' | 'design';
+export type StaffRole = 'dev' | 'design' | 'market';
 
 export interface StaffPersona {
   id: string;
@@ -25,6 +25,14 @@ export const ALPHA_STAFF: Record<string, StaffPersona> = {
     role: 'design',
     avatar: '✨',
     bio: '가독성과 사용자 감성의 장인. 학습 의욕을 고취시키는 따스한 멘토입니다.'
+  },
+  'scout': {
+    id: 'scout',
+    name: 'Alpha Scout',
+    title: '시장 분석 인텔리전스',
+    role: 'market',
+    avatar: '📡',
+    bio: '대한민국 전역의 자격증 응시 데이터와 취업 시장 트렌드를 실시간으로 감시하여 골드마인을 포착합니다.'
   }
 };
 
@@ -61,6 +69,18 @@ export const STAFF_MESSAGES = {
       "해당 단원의 키워드 요약본을 대조하며 학습 효율을 높여보십시오.",
       "오답 패턴 분석 결과, 특정 유형의 반복 숙달이 권장됩니다.",
       "잠시 휴식을 통해 뇌를 환기한 후 다음 세션을 진행하십시오."
+    ]
+  },
+  market: {
+    trending: [
+      "Alpha Scout 감지: 지게차 및 전기 분야 응시자 수가 급격히 상승 중입니다. 해당 전략 종목을 선점하십시오.",
+      "시장 데이터 분석 결과, 현재 20~30대 취업 준비생들 사이에서 '산업안전' 키워드가 압도적 1위입니다.",
+      "운전면허 필기 시장의 트래픽이 감지되었습니다. 생활 밀착형 대규모 유입이 예상됩니다."
+    ],
+    opportunity: [
+      "지금 이 종목을 정복하면 취업 시장에서 희소성이 300% 상승할 것으로 분석됩니다.",
+      "기출 패턴 분석 완료. 가장 효율적인 단기 합격 루트를 설계해 드립니다.",
+      "해당 자격증은 공기업 가산점과 공무원 가중치가 매우 높은 황금 종목입니다."
     ]
   }
 };

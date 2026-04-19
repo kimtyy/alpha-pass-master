@@ -205,9 +205,8 @@ function StudyContent() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const passScore = Math.round((score / (subject.questions.length || 1)) * 100);
+  const passScore = Math.round((score / (shuffledQuestions.length || 1)) * 100);
   const isPass = passScore >= 60;
-  const isCorrect = selected === currentQuestion?.answer;
 
   const filteredHistory = history.filter(h => {
     if (filter === 'all') return true;
@@ -229,7 +228,7 @@ function StudyContent() {
   // DIAGNOSTIC ENGINE COMPUTE
   // ----------------------------------------------------------------
   const subjectStats = history.reduce((acc: Record<string, {total: number, correct: number}>, h) => {
-    const q = subject.questions[h.idx];
+    const q = shuffledQuestions[h.idx];
     if (!acc[q.subject]) acc[q.subject] = { total: 0, correct: 0 };
     acc[q.subject].total++;
     if (h.isCorrect) acc[q.subject].correct++;
@@ -244,7 +243,6 @@ function StudyContent() {
 
   // Metacognitive Analysis
   const blindspots = history.filter(h => !h.isCorrect && h.isConfident).length; // "Confident but wrong"
-  const luckyStrikes = history.filter(h => h.isCorrect && !h.isConfident).length; // "Unsure but right"
 
   // 1. RESULT SCREEN
   if (isFinished) {
@@ -313,7 +311,7 @@ function StudyContent() {
 
           {/* Detailed Diagnosis UI */}
           <div className="w-full max-w-2xl mx-auto mb-16 space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            {/* 1. Radar Mastery Chart (한눈에 보는 리포트) */}
+            {/* 1. Radar Mastery Chart */}
             <div className="bg-[#12121a]/80 border border-white/5 rounded-[40px] p-8 md:p-12 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[100px] rounded-full" />
               <div className="relative z-10 flex flex-col items-center">
@@ -325,40 +323,28 @@ function StudyContent() {
                 {/* SVG Radar Chart */}
                 <div className="relative w-64 h-64 md:w-80 md:h-80 mb-10">
                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                    {/* Background Circles */}
                     {[20, 40, 60, 80, 100].map(r => (
                       <circle key={r} cx="50" cy="50" r={r/2} fill="none" stroke="white" strokeWidth="0.1" strokeOpacity="0.1" />
                     ))}
-                    {/* Axis Lines */}
                     {Object.keys(subjectStats).map((_, i, arr) => {
                       const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
                       return (
                         <line key={i} x1="50" y1="50" x2={50 + 50 * Math.cos(angle)} y2={50 + 50 * Math.sin(angle)} stroke="white" strokeWidth="0.1" strokeOpacity="0.1" />
                       );
                     })}
-                    {/* Data Polygon */}
                     <motion.polygon
                       initial={{ opacity: 0, scale: 0 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 1.5, ease: "easeOut" }}
                       points={Object.values(subjectStats).map((stat: any, i, arr) => {
                         const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
-                        const r = (stat.correct / stat.total) * 45 + 5; // offset slightly from center
+                        const r = (stat.correct / stat.total) * 45 + 5;
                         return `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)}`;
                       }).join(' ')}
                       className="fill-primary/20 stroke-primary stroke-[1.5]"
                     />
-                    {/* Data Points */}
-                    {Object.values(subjectStats).map((stat: any, i, arr) => {
-                      const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
-                      const r = (stat.correct / stat.total) * 45 + 5;
-                      return (
-                        <circle key={i} cx={50 + r * Math.cos(angle)} cy={50 + r * Math.sin(angle)} r="1.5" className="fill-white" />
-                      );
-                    })}
                   </svg>
                   
-                  {/* Subject Labels */}
                   {Object.keys(subjectStats).map((sub, i, arr) => {
                     const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
                     const x = 50 + 55 * Math.cos(angle);
@@ -375,7 +361,7 @@ function StudyContent() {
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
                     <div className="text-[8px] font-black text-gray-600 uppercase mb-1">Strongest</div>
                     <div className="text-xs font-bold text-accent">
-                      {Object.entries(subjectStats).reduce((a, b: any) => (a[1].correct/a[1].total > b[1].correct/b[1].total ? a : b) as any)[0]}
+                      {Object.entries(subjectStats).length > 0 ? Object.entries(subjectStats).reduce((a, b: any) => (a[1].correct/a[1].total > b[1].correct/b[1].total ? a : b) as any)[0] : 'N/A'}
                     </div>
                   </div>
                   <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
@@ -388,7 +374,7 @@ function StudyContent() {
               </div>
             </div>
 
-            {/* 2. Professional Analytical Prescription (전문가용 처방전 - 쭈욱 읽게 됨) */}
+            {/* Prescriptions */}
             <div className="space-y-6">
               <div className="bg-[#12121a]/60 border border-white/5 rounded-[40px] p-8 md:p-10 backdrop-blur-2xl">
                 <div className="flex items-center gap-3 mb-8">
@@ -413,9 +399,6 @@ function StudyContent() {
                         : `현재 성취도는 [${passScore}%]로 합격 기준(60%)에 미달합니다. 특정 단원에서의 지식 공백이 전체 점수를 끌어내리고 있으며, 전략적인 보완이 시급한 상태입니다.`
                       }
                     </p>
-                    <p className="text-[13px] leading-relaxed font-medium text-gray-500">
-                      본 결과는 최근 3개년 기출 경향과 수험생님의 응시 패턴을 복합 분석한 결과입니다. 특히 단원별 데이터 편차를 고려했을 때, 다음 단계의 학습 방향이 결과에 결정적인 영향을 미칠 것입니다.
-                    </p>
                   </section>
 
                   <section className="p-6 rounded-3xl bg-white/[0.02] border border-white/5">
@@ -427,58 +410,13 @@ function StudyContent() {
                       <div className="space-y-4">
                         <p className="text-[13px] leading-relaxed font-medium">
                           가장 보완이 시급한 영역은 **[${weakestSubject.name}]** 단원입니다. 
-                          해당 영역의 정답률인 ${(weakestSubject.rate * 100).toFixed(0)}%는 전체 평균에 비해 현저히 낮으며, 이는 기본 개념의 구조화가 부족함을 의미합니다.
                         </p>
-                        <ul className="space-y-2">
-                          <li className="flex gap-2 text-[12px] font-medium text-gray-400 italic">
-                             <div className="mt-1.5 w-1 h-1 rounded-full bg-accent shrink-0" />
-                             해당 단원의 핵심 키워드 중심 재개념화 필요
-                          </li>
-                          <li className="flex gap-2 text-[12px] font-medium text-gray-400 italic">
-                             <div className="mt-1.5 w-1 h-1 rounded-full bg-accent shrink-0" />
-                             최근 출제 빈도가 높은 응용 문제 풀이 권장
-                          </li>
-                        </ul>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 italic">전반적인 단원 밸런스가 양호하며, 치명적인 약점은 발견되지 않았습니다.</p>
+                      <p className="text-sm text-gray-500 italic">전반적인 단원 밸런스가 양호합니다.</p>
                     )}
                   </section>
-
-                  <section>
-                    <h5 className="text-[11px] font-black text-gray-500 uppercase mb-3">메타인지적 맹점 (Blindspots)</h5>
-                    <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10">
-                      <p className="text-[12px] font-medium leading-relaxed text-red-200/60">
-                        {blindspots > 0 
-                          ? `검토(Flag)하지 않았으나 틀린 문제가 ${blindspots}문항 발견되었습니다. 이는 자신이 알고 있다는 착각(Metacognitive Blindspot)이 발생하는 영역으로, 실제 시험에서 가장 주의해야 할 리스크 요소입니다.`
-                          : "맹점 문항이 발견되지 않았습니다. 자신의 실력을 정확히 파악하고 응시하고 계십니다."
-                        }
-                      </p>
-                    </div>
-                  </section>
-
-                  <div className="pt-6 border-t border-white/5">
-                     <p className="text-[11px] font-bold text-gray-600 text-center uppercase tracking-widest">
-                       Alpha Pass Master AI Intelligence Diagnostic System
-                     </p>
-                  </div>
                 </div>
-              </div>
-
-              {/* Step back to specific chapter breakdown if needed */}
-              <div className="bg-[#12121a]/40 border border-white/5 rounded-[40px] p-8 hidden md:block">
-                 <div className="flex items-center gap-2 mb-6">
-                    <BarChart3 size={14} className="text-gray-500" />
-                    <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Chapter Data Breakdown</h3>
-                 </div>
-                 <div className="space-y-4">
-                    {Object.entries(subjectStats).map(([sub, stat]: any) => (
-                      <div key={sub} className="flex justify-between items-center text-[11px] font-bold text-gray-500 px-2">
-                        <span>{sub}</span>
-                        <span>{stat.correct} / {stat.total}</span>
-                      </div>
-                    ))}
-                 </div>
               </div>
             </div>
           </div>
@@ -488,7 +426,7 @@ function StudyContent() {
         <main className="w-full max-w-2xl px-6">
           <div className="space-y-4">
             {filteredHistory.map((h, i) => {
-              const q = subject.questions[h.idx];
+              const q = shuffledQuestions[h.idx];
               const isActive = activeReviewIdx === h.idx;
               
               return (
@@ -505,15 +443,12 @@ function StudyContent() {
                       <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black border ${
                         h.isCorrect ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-red-500/10 border-red-500/20 text-red-500'
                       }`}>
-                        {h.idx + 1}
+                        {i + 1}
                       </div>
                       <div className="flex-1">
                         <p className={`text-[13px] font-bold leading-snug tracking-tight mb-1 ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                          {q.question.length > 60 && !isActive ? q.question.substring(0, 60) + '...' : q.question}
+                          {q.question}
                         </p>
-                      </div>
-                      <div className={`transition-transform duration-300 ${isActive ? 'rotate-90' : ''}`}>
-                        <ArrowRight size={16} className="text-gray-600" />
                       </div>
                     </div>
 
@@ -540,7 +475,6 @@ function StudyContent() {
                               </div>
                             )}
 
-                            {/* THE GATE */}
                             <div className="relative pt-2">
                               {isGuest ? (
                                 <div className="space-y-3">
@@ -577,7 +511,7 @@ function StudyContent() {
                                       Diagnostic Detail
                                     </div>
                                     <p className="text-xs leading-relaxed text-gray-300 font-medium italic">
-                                      {h.isCorrect ? q.diagnostic.correct : q.diagnostic.incorrect}
+                                      {(h.isCorrect ? q.diagnostic?.correct : q.diagnostic?.incorrect) || '심층 진단 데이터를 분석 중입니다. AI 해설 모델이 곧 업데이트됩니다.'}
                                     </p>
                                   </div>
                                 </div>
@@ -633,7 +567,6 @@ function StudyContent() {
         <div className="absolute top-0 left-1/4 w-full h-1/2 bg-primary/5 blur-[120px] rounded-full" />
       </div>
 
-      {/* CBT Header: Compacted for One-Screen */}
       <header className="w-full max-w-2xl px-5 pt-6 pb-3 flex justify-between items-center bg-[#09090d]/80 backdrop-blur-xl border-b border-white/5 z-50 shrink-0">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="p-2 rounded-xl bg-white/5 border border-white/10">
@@ -665,7 +598,6 @@ function StudyContent() {
       </header>
 
       <div className="flex-1 w-full max-w-7xl flex overflow-hidden lg:px-8 lg:pb-8">
-        {/* Main Focus Area */}
         <main className="flex-1 flex flex-col p-4 md:p-6 lg:p-0 overflow-hidden relative">
           <AnimatePresence mode="wait">
             <motion.div
@@ -722,7 +654,6 @@ function StudyContent() {
                 ))}
               </div>
 
-              {/* Navigation Footer: Compacted */}
               <div className="mt-6 mb-4 shrink-0 flex gap-3">
                 <button onClick={() => {
                   if (currentIdx > 0) {
@@ -734,7 +665,7 @@ function StudyContent() {
                   <ChevronLeft size={20} />
                 </button>
                 <button onClick={handleNext} className="flex-1 py-4 rounded-2xl bg-[#1a1a20] border border-white/5 text-white font-black text-sm shadow-xl active:scale-95 flex items-center justify-center gap-2">
-                  {currentIdx < subject.questions.length - 1 ? 'Next Item' : 'Review & Submit'}
+                  {currentIdx < shuffledQuestions.length - 1 ? 'Next Item' : 'Review & Submit'}
                   <ArrowRight size={18} />
                 </button>
               </div>
@@ -742,7 +673,6 @@ function StudyContent() {
           </AnimatePresence>
         </main>
 
-        {/* Desktop OMR Sidebar */}
         <aside className="hidden lg:flex w-96 flex-col p-8 bg-[#09090d]/80 border border-white/5 rounded-[40px] ml-6 overflow-hidden shadow-2xl backdrop-blur-3xl">
           <div className="mb-6 flex flex-col gap-2">
             <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Jump to Subject</h3>
@@ -790,16 +720,6 @@ function StudyContent() {
           </div>
 
           <div className="mt-auto space-y-4">
-            <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex justify-between items-center">
-              <div>
-                <div className="text-[9px] font-black text-gray-600 uppercase mb-1">Answered</div>
-                <div className="text-xl font-black text-white">{Object.values(examAnswers).filter(v => v !== null).length} / {subject.questions.length}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-[9px] font-black text-accent uppercase mb-1">Flagged</div>
-                <div className="text-xl font-black text-accent">{flaggedQuestions.size}</div>
-              </div>
-            </div>
             <button 
               onClick={handleFinalSubmit}
               className="w-full py-5 rounded-3xl bg-white text-black font-black flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all shadow-xl"
@@ -811,7 +731,6 @@ function StudyContent() {
         </aside>
       </div>
 
-      {/* Mobile OMR Drawer */}
       <AnimatePresence>
         {isOmrOpen && (
           <motion.div 
@@ -871,16 +790,6 @@ function StudyContent() {
             </div>
 
             <div className="p-8 border-t border-white/5 bg-[#09090d]">
-              <div className="flex justify-between items-end mb-8 px-2">
-                 <div>
-                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest block mb-1">Remaining</span>
-                    <span className="text-3xl font-black text-white">{subject.questions.length - Object.values(examAnswers).filter(v => v !== null).length}문항</span>
-                 </div>
-                 <div className="text-right">
-                    <span className="text-[10px] font-black text-accent uppercase tracking-widest block mb-1">Total Flagged</span>
-                    <span className="text-3xl font-black text-accent">{flaggedQuestions.size}</span>
-                 </div>
-              </div>
               <button 
                 onClick={() => {
                   setIsOmrOpen(false);

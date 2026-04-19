@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Search, BookOpen, GraduationCap, ChevronRight, Plus, Star, Filter, LayoutGrid, Clock, Calendar, Zap, Brain, Sparkles, ShieldCheck, Home, UtensilsCrossed, PencilRuler, Code, Construction } from 'lucide-react';
+import { Search, BookOpen, GraduationCap, ChevronRight, Plus, Star, Filter, LayoutGrid, Clock, Calendar, Zap, Brain, Sparkles, ShieldCheck, Home, UtensilsCrossed, PencilRuler, Code, Construction, Truck, Car, AlertCircle } from 'lucide-react';
 import { EXAM_DATA } from '@/data/exams';
 import { CERTIFICATE_LIST } from '@/data/certificates';
 import { AIAssistant } from '@/components/AIAssistant';
@@ -37,18 +37,20 @@ export default function CertificationHub() {
     if (id.includes('architectural')) return <PencilRuler size={24} />;
     if (id.includes('info-processing')) return <Code size={24} />;
     if (id.includes('electric')) return <Zap size={24} />;
+    if (id.includes('driver-license')) return <Car size={24} />;
+    if (id.includes('forklift')) return <Truck size={24} />;
     if (category === 'Engineer') return <Construction size={24} />;
     return <Zap size={24} />;
   };
 
-  // Select core subjects for shortcuts
+  // Select core subjects for shortcuts (Market-First Priority)
   const shortcutExams = [
+    'driver-license-general',
+    'forklift-operator-craftsman',
     'industrial-safety-engineer',
+    'electric-engineer',
     'real-estate-agent',
-    'info-processing-engineer',
-    'cook-korean-craftsman',
-    'architectural-craftsman',
-    'electric-engineer'
+    'info-processing-engineer'
   ].map(id => EXAM_DATA[id]).filter(Boolean);
 
   return (
@@ -62,6 +64,7 @@ export default function CertificationHub() {
       {/* Hero / Search Section */}
       <section className="pt-10 md:pt-14 pb-6 px-6 relative flex flex-col items-center justify-center">
         <div className="max-w-4xl mx-auto text-center w-full">
+          {/* Logo Section */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -69,8 +72,8 @@ export default function CertificationHub() {
           >
             <div className="flex items-center gap-3 mb-2">
               <Sparkles size={24} className="text-primary animate-pulse" />
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic">
-                ALPHA PASS
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic leading-tight">
+                ALPHA PASS MASTER
               </h1>
             </div>
             <p className="text-[11px] font-black text-primary/60 uppercase tracking-[0.5em] ml-1">
@@ -78,6 +81,7 @@ export default function CertificationHub() {
             </p>
           </motion.div>
           
+          {/* Search Bar Container */}
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -97,7 +101,7 @@ export default function CertificationHub() {
                 <input 
                   type="search" 
                   placeholder="Alpha Search" 
-                  className="w-full bg-[#12121a]/95 border-2 border-white/5 rounded-[40px] py-8 px-20 text-xl md:text-2xl font-black focus:outline-none focus:border-primary/30 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none tracking-tight"
+                  className="w-full bg-[#12121a]/95 border-2 border-white/5 rounded-[32px] py-6 px-16 text-lg md:text-xl font-black focus:outline-none focus:border-primary/30 backdrop-blur-3xl transition-all placeholder:text-gray-600 shadow-2xl [&::-webkit-search-cancel-button]:appearance-none tracking-tight text-center"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -105,7 +109,36 @@ export default function CertificationHub() {
             </div>
           </motion.div>
 
-          {/* Shortcut Circles: Conditional Visibility (Hide immediately when searching) */}
+          {/* Market Intelligence Alert (Alpha Scout) */}
+          <AnimatePresence mode="wait">
+            {!search && (
+              <motion.div
+                key="market-alert"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="max-w-2xl mx-auto mb-10"
+              >
+                <div className="flex items-center gap-4 px-6 py-4 rounded-3xl bg-primary/5 border border-primary/10 backdrop-blur-xl">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary shrink-0 animate-pulse">
+                    <AlertCircle size={20} />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[10px] font-black text-primary uppercase tracking-widest">Alpha Scout Alert</span>
+                      <span className="w-1 h-1 rounded-full bg-primary/40" />
+                      <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Market Intelligence Live</span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                      {STAFF_MESSAGES.market.trending[0]}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Shortcut Circles */}
           <AnimatePresence>
             {!search && (
               <motion.div 
@@ -113,7 +146,7 @@ export default function CertificationHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="flex flex-wrap justify-center gap-6 md:gap-10 px-4"
+                className="grid grid-cols-3 gap-y-10 gap-x-6 md:flex md:flex-wrap md:justify-center md:gap-10 px-6"
               >
                 {shortcutExams.map((exam) => (
                   <button
@@ -121,11 +154,11 @@ export default function CertificationHub() {
                     onClick={() => setSearch(exam.title)}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:text-primary transition-all duration-300 group-active:scale-95 shadow-2xl relative overflow-hidden">
+                    <div className="w-11 h-11 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:text-primary transition-all duration-300 group-active:scale-95 shadow-2xl relative overflow-hidden">
                       <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       {getExamIcon(exam.id, exam.category)}
                     </div>
-                    <span className="text-[11px] font-black text-gray-400 uppercase tracking-tight group-hover:text-gray-200 transition-colors">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter group-hover:text-gray-200 transition-colors text-center w-20 overflow-hidden text-ellipsis whitespace-nowrap">
                       {exam.title.split(' ')[0]}
                     </span>
                   </button>
@@ -245,8 +278,6 @@ export default function CertificationHub() {
           </section>
         </main>
       )}
-
-      {/* Footer Cleanup: Removed redundant instructions */}
     </div>
   );
 }

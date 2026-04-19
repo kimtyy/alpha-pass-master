@@ -22,6 +22,9 @@ export const CERTIFICATE_LIST: CertificateInfo[] = [
   { id: 'electronic-craftsman', name: '전자기기기능사', category: 'Craftsman', field: 'Electronic' },
   { id: 'electricity-safety-engineer', name: '전기안전기술사', category: 'Professional', field: 'Electrical' },
   { id: 'electric-construction-engineer', name: '전기공사기사', category: 'Engineer', field: 'Electrical' },
+  { id: 'forklift-operator-craftsman', name: '지게차운전기능사', category: 'Craftsman', field: 'Machinery' },
+  { id: 'driver-license-general', name: '운전면허(1/2종 보통)', category: 'Professional', field: 'Service' },
+  
   
   // Safety / Environment
   { id: 'industrial-safety-engineer', name: '산업안전기사', category: 'Engineer', field: 'Safety' },

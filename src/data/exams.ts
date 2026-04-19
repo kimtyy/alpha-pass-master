@@ -6,6 +6,8 @@ import { industrialSafetyEngineer } from './exams/industrial-safety-engineer';
 import { realEstateAgent } from './exams/real-estate-agent';
 import { cookKoreanCraftsman } from './exams/cook-korean-craftsman';
 import { architecturalCraftsman } from './exams/architectural-craftsman';
+import { driverLicenseGeneral } from './exams/driver-license-general';
+import { forkliftOperatorCraftsman } from './exams/forklift-operator-craftsman';
 
 export interface Question {
   id: string;
@@ -14,7 +16,8 @@ export interface Question {
   answer: number;
   explanation: string;
   subject: string;
-  diagnostic: {
+  type?: 'text' | 'photo' | 'video' | 'illustration';
+  diagnostic?: {
     correct: string;
     incorrect: string;
   };
@@ -24,6 +27,7 @@ export interface ExamSubject {
   id: string;
   title: string;
   category: 'Engineer' | 'Craftsman' | 'Professional';
+  subjects?: { name: string; targetPerSubject: number }[];
   questions: Question[];
 }
 
@@ -39,6 +43,8 @@ export const EXAM_DATA: Record<string, ExamSubject> = {
     questions: infoProcessingCraftsman.questions.slice(10, 20).map(q => ({ ...q, id: `ec_${q.id}` })) 
   },
   'industrial-safety-engineer': industrialSafetyEngineer,
+  'driver-license-general': driverLicenseGeneral,
+  'forklift-operator-craftsman': forkliftOperatorCraftsman,
   'logistics-management-engineer': {
     id: 'logistics-management-engineer',
     title: '물류관리사',
