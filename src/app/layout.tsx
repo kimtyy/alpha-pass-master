@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ALPHA PASS MASTER | AI 합격 비서",
@@ -37,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased dark scroll-smooth">
-      <body className={`${inter.className} min-h-full flex flex-col bg-[#060608] text-white selection:bg-primary/30`}>
+      <body className={`${outfit.className} min-h-full flex flex-col bg-[#060608] text-white selection:bg-primary/30`}>
         {children}
         <FloatingNav />
       </body>
