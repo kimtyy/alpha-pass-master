@@ -63,12 +63,19 @@ export default function CertificationHub() {
       <section className="pt-10 md:pt-14 pb-6 px-6 relative flex flex-col items-center justify-center">
         <div className="max-w-4xl mx-auto text-center w-full">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-[10px] font-black uppercase tracking-widest mb-10"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center mb-12"
           >
-            <Sparkles size={12} className="text-primary" />
-            ALPHA PASS MASTER
+            <div className="flex items-center gap-3 mb-2">
+              <Sparkles size={24} className="text-primary animate-pulse" />
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic">
+                ALPHA PASS
+              </h1>
+            </div>
+            <p className="text-[11px] font-black text-primary/60 uppercase tracking-[0.5em] ml-1">
+              Examination Master Database
+            </p>
           </motion.div>
           
           <motion.div 
@@ -114,11 +121,11 @@ export default function CertificationHub() {
                     onClick={() => setSearch(exam.title)}
                     className="flex flex-col items-center gap-3 group"
                   >
-                    <div className="w-14 h-14 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:text-primary transition-all duration-300 group-active:scale-95 shadow-2xl relative overflow-hidden">
+                    <div className="w-12 h-12 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:text-primary transition-all duration-300 group-active:scale-95 shadow-2xl relative overflow-hidden">
                       <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       {getExamIcon(exam.id, exam.category)}
                     </div>
-                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-tighter group-hover:text-gray-200 transition-colors">
+                    <span className="text-[11px] font-black text-gray-400 uppercase tracking-tight group-hover:text-gray-200 transition-colors">
                       {exam.title.split(' ')[0]}
                     </span>
                   </button>
@@ -239,16 +246,7 @@ export default function CertificationHub() {
         </main>
       )}
 
-      {search.length === 0 && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="py-20 text-center opacity-40"
-        >
-          <div className="w-12 h-[1px] bg-white/10 mx-auto mb-4" />
-          <p className="text-[9px] font-black text-gray-600 uppercase tracking-[0.4em]">Search to Initialize Diagnostic Mission</p>
-        </motion.div>
-      )}
+      {/* Footer Cleanup: Removed redundant instructions */}
     </div>
   );
 }
