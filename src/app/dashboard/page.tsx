@@ -72,7 +72,7 @@ export default function CertificationHub() {
           >
             <div className="flex items-center gap-3 mb-2">
               <Sparkles size={24} className="text-primary animate-pulse" />
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic leading-tight">
+              <h1 className="text-xl md:text-3xl lg:text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic leading-tight">
                 ALPHA PASS MASTER
               </h1>
             </div>
