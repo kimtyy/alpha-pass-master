@@ -104,6 +104,7 @@ function StudyContent() {
     }
     setHistory(prev => [...prev, { 
       idx: currentIdx, 
+      originalIdx: currentQuestion.originalIdx,
       selected: selected!, 
       isCorrect,
       isConfident: true 
@@ -187,9 +188,9 @@ function StudyContent() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const passScore = Math.round((score / subject.questions.length) * 100);
+  const passScore = Math.round((score / (subject.questions.length || 1)) * 100);
   const isPass = passScore >= 60;
-  const isCorrect = selected === currentQuestion.answer;
+  const isCorrect = selected === currentQuestion?.answer;
 
   const filteredHistory = history.filter(h => {
     if (filter === 'all') return true;
@@ -197,6 +198,15 @@ function StudyContent() {
     if (filter === 'incorrect') return !h.isCorrect;
     return true;
   });
+
+  // Calculate subject groups for Shuffled Questions
+  const subjectGroups = shuffledQuestions?.reduce((acc: any[], q, i) => {
+    const last = acc[acc.length - 1];
+    if (!last || last.name !== q.subject) {
+      acc.push({ name: q.subject, startIdx: i });
+    }
+    return acc;
+  }, []);
 
   // ----------------------------------------------------------------
   // DIAGNOSTIC ENGINE COMPUTE
@@ -218,8 +228,6 @@ function StudyContent() {
   // Metacognitive Analysis
   const blindspots = history.filter(h => !h.isCorrect && h.isConfident).length; // "Confident but wrong"
   const luckyStrikes = history.filter(h => h.isCorrect && !h.isConfident).length; // "Unsure but right"
-
-  // Remove selection screen, always exam
 
   // 1. RESULT SCREEN
   if (isFinished) {
@@ -589,7 +597,19 @@ function StudyContent() {
     );
   }
 
-  // 2. EXAM AREA
+  // 2. LOADING STATE
+  if (shuffledQuestions.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#060608] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest animate-pulse">Initializing CBT Engine...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. MAIN EXAM SCREEN
   return (
     <div className="h-[100dvh] bg-[#060608] text-white flex flex-col items-center overflow-hidden relative">
       <div className="fixed inset-0 pointer-events-none -z-10">
@@ -604,6 +624,10 @@ function StudyContent() {
           </Link>
           <div className="flex flex-col">
             <h2 className="text-[12px] font-black tracking-tight leading-none">{subject.title}</h2>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">{currentQuestion?.subject}</span>
+            </div>
           </div>
         </div>
 
@@ -656,7 +680,7 @@ function StudyContent() {
               </div>
 
               <div className="flex-1 flex flex-col gap-2.5 overflow-hidden">
-                {currentQuestion.options.map((option, idx) => (
+                {currentQuestion.options.map((option: string, idx: number) => (
                   <motion.button
                     key={idx}
                     whileTap={{ scale: 0.98 }}
@@ -703,7 +727,29 @@ function StudyContent() {
 
         {/* Desktop OMR Sidebar */}
         <aside className="hidden lg:flex w-96 flex-col p-8 bg-[#09090d]/80 border border-white/5 rounded-[40px] ml-6 overflow-hidden shadow-2xl backdrop-blur-3xl">
-          <div className="mb-8 overflow-y-auto pr-2">
+          <div className="mb-6 flex flex-col gap-2">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Jump to Subject</h3>
+            <div className="flex flex-wrap gap-2">
+              {subjectGroups?.map((group) => (
+                <button
+                  key={group.name}
+                  onClick={() => {
+                    setCurrentIdx(group.startIdx);
+                    setSelected(examAnswers[group.startIdx]);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg border text-[8px] font-black uppercase transition-all ${
+                    currentQuestion?.subject === group.name 
+                      ? 'bg-primary border-primary text-white' 
+                      : 'bg-white/5 border-white/5 text-gray-500 hover:text-white'
+                  }`}
+                >
+                  {group.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-8 overflow-y-auto pr-2 custom-scrollbar">
             <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Exam Tracker</h3>
             <div className="grid grid-cols-5 gap-3">
               {shuffledQuestions.map((_, i) => (
@@ -714,7 +760,7 @@ function StudyContent() {
                     setSelected(examAnswers[i]);
                   }}
                   className={`h-10 rounded-xl flex items-center justify-center text-[10px] font-black transition-all border ${
-                    currentIdx === i ? 'bg-primary border-primary text-white shadow-lg' : 
+                    currentIdx === i ? 'bg-primary border-primary text-white shadow-lg scale-110' : 
                     flaggedQuestions.has(i) ? 'bg-accent/20 border-accent/40 text-accent' :
                     examAnswers[i] !== null ? 'bg-white/10 border-white/20 text-gray-300' : 
                     'bg-white/5 border-white/5 text-gray-600'
@@ -761,6 +807,27 @@ function StudyContent() {
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#09090d]">
               <h3 className="text-[12px] font-black uppercase tracking-widest text-gray-500">Exam Navigator</h3>
               <button onClick={() => setIsOmrOpen(false)} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase">Close</button>
+            </div>
+            
+            <div className="p-6 overflow-x-auto whitespace-nowrap border-b border-white/5 no-scrollbar bg-[#0d0d12]">
+              <div className="flex gap-2">
+                {subjectGroups?.map((group) => (
+                  <button
+                    key={group.name}
+                    onClick={() => {
+                      setCurrentIdx(group.startIdx);
+                      setSelected(examAnswers[group.startIdx]);
+                    }}
+                    className={`px-4 py-2 rounded-xl border text-[9px] font-black uppercase transition-all shrink-0 ${
+                      currentQuestion?.subject === group.name 
+                        ? 'bg-primary border-primary text-white' 
+                        : 'bg-white/5 border-white/5 text-gray-500'
+                    }`}
+                  >
+                    {group.name}
+                  </button>
+                ))}
+              </div>
             </div>
             
             <div className="flex-1 overflow-y-auto p-6">
