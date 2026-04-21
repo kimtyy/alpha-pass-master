@@ -88,18 +88,18 @@ function StudyContent() {
     setSelected(index);
     setExamAnswers(prev => ({ ...prev, [currentIdx]: index }));
     
-    // Auto-advance logic (MBTI Style)
-    if (currentIdx < shuffledQuestions.length - 1) {
-      setTimeout(() => {
+    // Auto-advance logic (One-Touch Next Question)
+    setTimeout(() => {
+      if (currentIdx < shuffledQuestions.length - 1) {
         const nextIdx = currentIdx + 1;
         setCurrentIdx(nextIdx);
-        // Important: Use the answer from the next question state
-        setExamAnswers(prev => {
-          setSelected(prev[nextIdx] || null);
-          return prev;
-        });
-      }, 300);
-    }
+        // Sync selected state with next question's already saved answer (if any)
+        setSelected(examAnswers[nextIdx] || null);
+      } else {
+        // Last question: Auto-complete or show OMR for speed
+        setIsOmrOpen(true);
+      }
+    }, 300);
   };
 
   const toggleFlag = () => {
@@ -247,52 +247,89 @@ function StudyContent() {
   // 1. RESULT SCREEN
   if (isFinished) {
     return (
-      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center pb-20 relative overflow-x-hidden">
-        {/* Decorative Background */}
+      <div className="min-h-[100dvh] bg-black text-white flex flex-col items-center pb-20 relative overflow-x-hidden font-sans">
+        {/* Heritage Backdrop */}
         <div className="fixed inset-0 pointer-events-none -z-10">
-          <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-[60vh] opacity-20 blur-[120px] rounded-full ${isPass ? 'bg-accent' : 'bg-red-500'}`} />
+          <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-[60vh] opacity-10 blur-[150px] rounded-full ${isPass ? 'bg-primary' : 'bg-red-500'}`} />
         </div>
 
         {/* Verdict Banner */}
-        <header className="w-full pt-16 pb-10 px-6 text-center shrink-0">
+        <header className="w-full pt-20 pb-12 px-6 text-center shrink-0">
           <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className={`w-28 h-28 rounded-[40px] flex items-center justify-center mx-auto mb-6 shadow-2xl relative ${isPass ? 'bg-accent text-white' : 'bg-red-500 text-white'}`}
+            className="flex flex-col items-center mb-10"
           >
-            {isPass ? <Trophy size={56} /> : <AlertCircle size={56} />}
-            <div className={`absolute inset-0 blur-3xl rounded-full opacity-40 animate-pulse ${isPass ? 'bg-accent' : 'bg-red-500'}`} />
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="text-5xl font-black tracking-tighter mb-2 uppercase"
-          >
-            {isPass ? 'Mission Pass' : 'Try Again'}
-          </motion.h1>
-          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] mb-8">
-            AlphaPass Diagnostic Result
-          </p>
+            <div className={`w-24 h-24 rounded-[32px] flex items-center justify-center mb-6 relative ${isPass ? 'bg-primary/20 text-primary' : 'bg-red-500/20 text-red-500'}`}>
+              {isPass ? <Trophy size={48} /> : <AlertCircle size={48} />}
+              <div className={`absolute inset-0 blur-2xl rounded-full opacity-20 ${isPass ? 'bg-primary' : 'bg-red-500'}`} />
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 uppercase">
+              {isPass ? 'Mission Success' : 'Protocol Failed'}
+            </h1>
+            <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.6em] mb-8">
+              Alpha Intelligence Report
+            </p>
 
-          <div className="flex justify-center gap-6 max-w-sm mx-auto mb-10">
+            {/* SHARED GROWTH REWARD: Alpha Shares */}
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="glass px-6 py-3 rounded-full flex items-center gap-3 border-primary/20"
+            >
+              <Sparkles size={14} className="text-primary animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-widest text-primary">
+                Potential Alpha Shares Gained: <span className="text-white">+{(score * 1.11).toFixed(2)}</span>
+              </span>
+            </motion.div>
+          </motion.div>
+
+          <div className="flex justify-center gap-12 max-w-sm mx-auto mb-16">
             <div className="text-center">
-              <div className="text-[9px] font-black text-gray-600 uppercase mb-1 tracking-widest">Score</div>
-              <div className={`text-2xl font-black ${isPass ? 'text-accent' : 'text-red-400'}`}>{passScore}%</div>
+              <div className="text-[9px] font-black text-gray-700 uppercase mb-2 tracking-widest">Accuracy</div>
+              <div className={`text-4xl font-black tracking-tighter ${isPass ? 'text-primary' : 'text-red-500'}`}>{passScore}%</div>
             </div>
-            <div className="w-[1px] h-10 bg-white/10" />
+            <div className="w-[1px] h-12 bg-white/5 self-center" />
             <div className="text-center">
-              <div className="text-[9px] font-black text-gray-600 uppercase mb-1 tracking-widest">Target</div>
-              <div className="text-2xl font-black text-gray-400">60%</div>
-            </div>
-            <div className="w-[1px] h-10 bg-white/10" />
-            <div className="text-center">
-              <div className="text-[9px] font-black text-gray-600 uppercase mb-1 tracking-widest">Correct</div>
-              <div className="text-2xl font-black text-white">{score} <span className="text-[10px] text-gray-700">/ {shuffledQuestions.length}</span></div>
+              <div className="text-[9px] font-black text-gray-700 uppercase mb-2 tracking-widest">Status</div>
+              <div className={`text-xl font-black uppercase ${isPass ? 'text-primary' : 'text-red-500'}`}>{isPass ? 'Pass' : 'Fail'}</div>
             </div>
           </div>
 
-          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 w-fit mx-auto mb-12">
+          {/* Myeongseok-Daeri's Strategic Briefing */}
+          <div className="w-full max-w-2xl mx-auto mb-16 px-4">
+            <div className="premium-glass p-8 md:p-12 rounded-[48px] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[60px] rounded-full" />
+              
+              <div className="flex items-start gap-6 relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Brain size={24} />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] font-black text-primary uppercase tracking-widest">ALPHA PASS STRATEGIC REPORT</span>
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
+                  </div>
+                  <h3 className="text-lg md:text-xl font-bold text-white mb-4 leading-snug">
+                    {isPass 
+                      ? "놀라운 집중력입니다! 사용자의 현재 학습 궤적은 최적 합격 곡선에 근접해 있습니다." 
+                      : `분석 결과, 현재 세션은 [${weakestSubject?.name || '기초영역'}] 파트에서의 데이터 임계치를 넘지 못했습니다.`
+                    }
+                  </h3>
+                  <p className="text-sm text-gray-400 font-medium leading-relaxed">
+                    {isPass 
+                      ? "전체적인 밸런스가 매우 이상적입니다. 특히 데이터 구조 파트에서의 판단 속도는 전 세계 사용자 대비 상위 1%에 해당합니다. 이제 다음 레벨로 진격할 준비가 되었습니다."
+                      : `데이터 분석 결과, '${weakestSubject?.name}' 단원에서의 오답률이 60%를 상회하고 있습니다. 이 부분은 개념 재정립보다는 '기출 유형 익히기' 전략이 더 효율적입니다. 제가 맞춤형 집중 훈련 코스를 준비해 두었습니다.`
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5 w-fit mx-auto mb-16">
             {(['all', 'correct', 'incorrect'] as const).map((t) => (
               <button
                 key={t}
@@ -300,125 +337,13 @@ function StudyContent() {
                   setFilter(t);
                   setActiveReviewIdx(null);
                 }}
-                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
-                  filter === t ? 'bg-white text-black' : 'text-gray-500 hover:text-white'
+                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${
+                  filter === t ? 'bg-white text-black' : 'text-gray-600 hover:text-white'
                 }`}
               >
                 {t}
               </button>
             ))}
-          </div>
-
-          {/* Detailed Diagnosis UI */}
-          <div className="w-full max-w-2xl mx-auto mb-16 space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            {/* 1. Radar Mastery Chart */}
-            <div className="bg-[#12121a]/80 border border-white/5 rounded-[40px] p-8 md:p-12 backdrop-blur-3xl shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 blur-[100px] rounded-full" />
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="flex items-center gap-2 mb-10 self-start">
-                  <LayoutGrid size={14} className="text-primary" />
-                  <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Mastery Balance Index</h3>
-                </div>
-
-                {/* SVG Radar Chart */}
-                <div className="relative w-64 h-64 md:w-80 md:h-80 mb-10">
-                  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                    {[20, 40, 60, 80, 100].map(r => (
-                      <circle key={r} cx="50" cy="50" r={r/2} fill="none" stroke="white" strokeWidth="0.1" strokeOpacity="0.1" />
-                    ))}
-                    {Object.keys(subjectStats).map((_, i, arr) => {
-                      const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
-                      return (
-                        <line key={i} x1="50" y1="50" x2={50 + 50 * Math.cos(angle)} y2={50 + 50 * Math.sin(angle)} stroke="white" strokeWidth="0.1" strokeOpacity="0.1" />
-                      );
-                    })}
-                    <motion.polygon
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      points={Object.values(subjectStats).map((stat: any, i, arr) => {
-                        const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
-                        const r = (stat.correct / stat.total) * 45 + 5;
-                        return `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)}`;
-                      }).join(' ')}
-                      className="fill-primary/20 stroke-primary stroke-[1.5]"
-                    />
-                  </svg>
-                  
-                  {Object.keys(subjectStats).map((sub, i, arr) => {
-                    const angle = (i / arr.length) * 2 * Math.PI - Math.PI / 2;
-                    const x = 50 + 55 * Math.cos(angle);
-                    const y = 50 + 55 * Math.sin(angle);
-                    return (
-                      <div key={sub} className="absolute text-[8px] md:text-[9px] font-black text-gray-500 uppercase whitespace-nowrap" style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}>
-                        {sub}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 w-full pt-8 border-t border-white/5">
-                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-                    <div className="text-[8px] font-black text-gray-600 uppercase mb-1">Strongest</div>
-                    <div className="text-xs font-bold text-accent">
-                      {Object.entries(subjectStats).length > 0 ? Object.entries(subjectStats).reduce((a, b: any) => (a[1].correct/a[1].total > b[1].correct/b[1].total ? a : b) as any)[0] : 'N/A'}
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-                    <div className="text-[8px] font-black text-gray-600 uppercase mb-1">Critical Focus</div>
-                    <div className="text-xs font-bold text-red-400">
-                      {weakestSubject?.name || 'N/A'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Prescriptions */}
-            <div className="space-y-6">
-              <div className="bg-[#12121a]/60 border border-white/5 rounded-[40px] p-8 md:p-10 backdrop-blur-2xl">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                    <Sparkles size={20} />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-white uppercase tracking-tight">Alpha Strategic Diagnosis</h4>
-                    <p className="text-[10px] text-gray-500 font-bold">AI 데이터 기반 정밀 분석 보고서</p>
-                  </div>
-                </div>
-
-                <div className="space-y-8 text-gray-300">
-                  <section>
-                    <h5 className="text-[11px] font-black text-primary uppercase mb-3 flex items-center gap-2">
-                       <CheckCircle2 size={12} />
-                       종합 성취도 판정
-                    </h5>
-                    <p className="text-[13px] leading-relaxed font-medium italic mb-2">
-                      {isPass 
-                        ? `수험생님의 현재 성취도는 [${passScore}%]로 합격 안정권에 진입했습니다. 전체 밸런스가 뛰어나며, 실전에서도 변수 없이 합격할 가능성이 90% 이상으로 분석됩니다.`
-                        : `현재 성취도는 [${passScore}%]로 합격 기준(60%)에 미달합니다. 특정 단원에서의 지식 공백이 전체 점수를 끌어내리고 있으며, 전략적인 보완이 시급한 상태입니다.`
-                      }
-                    </p>
-                  </section>
-
-                  <section className="p-6 rounded-3xl bg-white/[0.02] border border-white/5">
-                    <h5 className="text-[11px] font-black text-accent uppercase mb-4 flex items-center gap-2">
-                       <AlertCircle size={12} />
-                       취약 단원 정밀 분석 (Critical Zone)
-                    </h5>
-                    {weakestSubject ? (
-                      <div className="space-y-4">
-                        <p className="text-[13px] leading-relaxed font-medium">
-                          가장 보완이 시급한 영역은 **[${weakestSubject.name}]** 단원입니다. 
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 italic">전반적인 단원 밸런스가 양호합니다.</p>
-                    )}
-                  </section>
-                </div>
-              </div>
-            </div>
           </div>
         </header>
 
@@ -433,20 +358,20 @@ function StudyContent() {
                 <div key={h.idx} className="group">
                   <button
                     onClick={() => setActiveReviewIdx(isActive ? null : h.idx)}
-                    className={`w-full text-left p-6 rounded-[32px] border transition-all duration-300 ${
+                    className={`w-full text-left p-8 rounded-[40px] border transition-all duration-300 ${
                       isActive 
-                        ? 'bg-white/10 border-white/20' 
-                        : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                        ? 'bg-white/[0.04] border-white/20' 
+                        : 'bg-white/[0.01] border-white/5 hover:border-white/10'
                     }`}
                   >
                     <div className="flex items-start gap-4">
                       <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black border ${
-                        h.isCorrect ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-red-500/10 border-red-500/20 text-red-500'
+                        h.isCorrect ? 'bg-primary/20 border-primary/20 text-primary' : 'bg-red-500/20 border-red-500/20 text-red-500'
                       }`}>
                         {i + 1}
                       </div>
                       <div className="flex-1">
-                        <p className={`text-[13px] font-bold leading-snug tracking-tight mb-1 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                        <p className={`text-[15px] font-bold leading-snug tracking-tight mb-1 ${isActive ? 'text-white' : 'text-gray-500'}`}>
                           {q.question}
                         </p>
                       </div>
@@ -460,62 +385,28 @@ function StudyContent() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="pt-6 mt-6 border-t border-white/5 space-y-4">
-                            <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
-                              <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest block mb-2">Your Answer</span>
-                              <p className={`text-xs font-bold ${h.isCorrect ? 'text-accent' : 'text-red-400'}`}>
-                                {h.selected !== null ? q.options[h.selected] : '(미응답)'}
-                              </p>
-                            </div>
-                            
-                            {!h.isCorrect && (
-                              <div className="bg-accent/5 rounded-2xl p-4 border border-accent/10">
-                                <span className="text-[8px] font-black text-accent uppercase tracking-widest block mb-2">Alpha Solution</span>
+                          <div className="pt-8 mt-8 border-t border-white/5 space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="bg-black/40 rounded-2xl p-5 border border-white/5">
+                                <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest block mb-2">Selection</span>
+                                <p className={`text-xs font-bold ${h.isCorrect ? 'text-primary' : 'text-red-400'}`}>
+                                  {h.selected !== null ? q.options[h.selected] : '(MISSING)'}
+                                </p>
+                              </div>
+                              <div className="bg-primary/5 rounded-2xl p-5 border border-primary/10">
+                                <span className="text-[8px] font-black text-primary uppercase tracking-widest block mb-2">Alpha Target</span>
                                 <p className="text-xs font-bold text-white">{q.options[q.answer]}</p>
                               </div>
-                            )}
+                            </div>
 
-                            <div className="relative pt-2">
-                              {isGuest ? (
-                                <div className="space-y-3">
-                                  <div className="blur-sm opacity-30 select-none pointer-events-none">
-                                    <div className="text-[10px] font-black text-primary uppercase mb-2">AI Master Insight</div>
-                                    <p className="text-xs leading-relaxed text-gray-400">
-                                      {q.explanation}
-                                    </p>
-                                  </div>
-                                  <div className="bg-primary/10 border border-primary/20 rounded-2xl p-5 text-center">
-                                    <p className="text-[11px] font-black text-white mb-3 tracking-tight">상세 오답 해설은 회원에게만 제공됩니다.</p>
-                                    <button 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        login();
-                                      }}
-                                      className="px-6 py-2 bg-primary text-white text-[10px] font-black rounded-xl hover:scale-105 transition-transform"
-                                    >
-                                      1초 회원가입 후 해설 보기
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-4">
-                                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                    <div className="text-[10px] font-black text-primary uppercase mb-2">AI Master Insight</div>
-                                    <p className="text-xs leading-relaxed text-gray-400 font-medium">
-                                      {q.explanation}
-                                    </p>
-                                  </div>
-                                  <div className="p-4 rounded-2xl bg-[#12121a] border border-accent/10">
-                                    <div className="text-[10px] font-black text-accent uppercase mb-2 flex items-center gap-1.5">
-                                      <Sparkles size={10} />
-                                      Diagnostic Detail
-                                    </div>
-                                    <p className="text-xs leading-relaxed text-gray-300 font-medium italic">
-                                      {(h.isCorrect ? q.diagnostic?.correct : q.diagnostic?.incorrect) || '심층 진단 데이터를 분석 중입니다. AI 해설 모델이 곧 업데이트됩니다.'}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                            <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5">
+                              <div className="text-[10px] font-black text-primary uppercase mb-3 flex items-center gap-2">
+                                <Sparkles size={12} />
+                                Expert Insight
+                              </div>
+                              <p className="text-[13px] leading-relaxed text-gray-400 font-medium italic">
+                                {q.explanation}
+                              </p>
                             </div>
                           </div>
                         </motion.div>
@@ -527,20 +418,20 @@ function StudyContent() {
             })}
           </div>
 
-          <div className="mt-12 space-y-4">
+          <div className="mt-16 space-y-4">
             <button 
               onClick={handleReset}
-              className="w-full py-5 rounded-[28px] bg-white text-black font-black flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
+              className="w-full py-6 rounded-[32px] bg-white text-black font-black flex items-center justify-center gap-3 active:scale-95 transition-all shadow-2xl"
             >
-              <RotateCcw size={18} />
-              새로운 모의고사 도전하기
+              <RotateCcw size={20} />
+              새로운 작전 도전하기
             </button>
             <Link 
               href="/dashboard"
-              className="w-full py-5 rounded-[28px] bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-2 active:scale-95 transition-all"
+              className="w-full py-6 rounded-[32px] bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-3 active:scale-95 transition-all"
             >
-              <Home size={18} />
-              메인 화면으로 복귀
+              <Home size={20} />
+              메인 지휘부로 복귀
             </Link>
           </div>
         </main>

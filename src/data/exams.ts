@@ -3,6 +3,7 @@ import { infoProcessingEngineer } from './exams/info-processing-engineer';
 import { electricCraftsman } from './exams/electric-craftsman';
 import { electricEngineer } from './exams/electric-engineer';
 import { industrialSafetyEngineer } from './exams/industrial-safety-engineer';
+import { sqld } from './exams/sqld';
 import { realEstateAgent } from './exams/real-estate-agent';
 import { cookKoreanCraftsman } from './exams/cook-korean-craftsman';
 import { architecturalCraftsman } from './exams/architectural-craftsman';
@@ -57,6 +58,7 @@ export const EXAM_DATA: Record<string, ExamSubject> = {
     category: 'Craftsman',
     questions: infoProcessingCraftsman.questions.slice(50, 55).map(q => ({ ...q, id: `hdc_${q.id}` }))
   },
+  'sqld': sqld,
   'cook-korean-craftsman': cookKoreanCraftsman,
   'architectural-craftsman': architecturalCraftsman,
   'real-estate-agent': realEstateAgent,

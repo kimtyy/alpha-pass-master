@@ -28,11 +28,11 @@ export const ALPHA_STAFF: Record<string, StaffPersona> = {
   },
   'scout': {
     id: 'scout',
-    name: 'Alpha Scout',
+    name: '명석대리',
     title: '시장 분석 인텔리전스',
     role: 'market',
     avatar: '📡',
-    bio: '대한민국 전역의 자격증 응시 데이터와 취업 시장 트렌드를 실시간으로 감시하여 골드마인을 포착합니다.'
+    bio: '시장 상황을 명석하게 분석하여 황금 인맥과 데이터를 연결하는 정보 요원입니다.'
   }
 };
 
