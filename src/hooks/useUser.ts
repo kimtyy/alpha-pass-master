@@ -1,38 +1,58 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/client';
 
 export type UserStatus = 'guest' | 'member' | 'premium';
 
 export function useUser() {
-  const [status, setStatus] = useState<UserStatus>('guest');
+  const [user, setUser] = useState<User | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const savedStatus = localStorage.getItem('alpha-user-status') as UserStatus;
-    if (savedStatus) {
-      setStatus(savedStatus);
-    }
-    setIsLoaded(true);
+    const supabase = createClient();
+
+    // 초기 세션 확인
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      setIsLoaded(true);
+    });
+
+    // 로그인/로그아웃 이벤트 구독
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const updateStatus = (newStatus: UserStatus) => {
-    setStatus(newStatus);
-    localStorage.setItem('alpha-user-status', newStatus);
+  const login = async () => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
   };
 
-  const login = () => updateStatus('member');
-  const logout = () => updateStatus('guest');
-  const subscribe = () => updateStatus('premium');
+  const logout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  };
+
+  // 기존 코드와의 호환을 위한 status 필드
+  const status: UserStatus = user ? 'member' : 'guest';
 
   return {
+    user,
     status,
     isLoaded,
+    isGuest: !user,
+    isMember: !!user,
+    isPremium: false,   // 추후 DB 필드로 확장
     login,
     logout,
-    subscribe,
-    isGuest: status === 'guest',
-    isMember: status === 'member',
-    isPremium: status === 'premium',
   };
 }
