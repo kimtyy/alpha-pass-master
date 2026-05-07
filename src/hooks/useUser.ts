@@ -45,6 +45,11 @@ export function useUser() {
   // 기존 코드와의 호환을 위한 status 필드
   const status: UserStatus = user ? 'member' : 'guest';
 
+  const subscribe = () => {
+    // 추후 결제 플로우 연동
+    alert('프리미엄 멤버십 준비 중입니다.');
+  };
+
   return {
     user,
     status,
@@ -54,5 +59,6 @@ export function useUser() {
     isPremium: false,   // 추후 DB 필드로 확장
     login,
     logout,
+    subscribe,
   };
 }
