@@ -3,7 +3,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/hooks/useUser';
-import { User, LogOut, ShieldCheck, Zap, BookOpen, ArrowRight } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Zap, BookOpen, ArrowRight, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AccountPage() {
   const { status, login, logout, subscribe, isGuest, isMember, isPremium } = useUser();
@@ -61,6 +62,7 @@ export default function AccountPage() {
               active: !isGuest,
               color: 'text-primary',
               bg: 'bg-primary/10',
+              href: '/records',
             },
             {
               icon: BookOpen,
@@ -69,6 +71,7 @@ export default function AccountPage() {
               active: isMember || isPremium,
               color: 'text-[#34c77b]',
               bg: 'bg-[#34c77b]/10',
+              href: '/records',
             },
             {
               icon: Zap,
@@ -77,28 +80,46 @@ export default function AccountPage() {
               active: isPremium,
               color: 'text-primary',
               bg: 'bg-primary/10',
+              href: null,
             },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-[10px]"
-            >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${item.bg}`}>
-                <item.icon size={18} className={item.color} />
+          ].map((item) => {
+            const inner = (
+              <>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${item.bg}`}>
+                  <item.icon size={18} className={item.color} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-foreground leading-none mb-0.5">{item.label}</p>
+                  <p className="text-[10px] text-text-secondary">{item.desc}</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md ${
+                    item.active
+                      ? 'bg-[#34c77b]/10 text-[#34c77b]'
+                      : 'bg-white/5 text-text-secondary/50'
+                  }`}>
+                    {item.active ? 'ON' : 'OFF'}
+                  </span>
+                  {item.href && (
+                    <ChevronRight size={14} className="text-text-secondary/40" />
+                  )}
+                </div>
+              </>
+            );
+            return item.href ? (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3 px-4 py-3.5 rounded-[10px] hover:bg-white/5 transition-colors"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <div key={item.label} className="flex items-center gap-3 px-4 py-3.5 rounded-[10px]">
+                {inner}
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-foreground leading-none mb-0.5">{item.label}</p>
-                <p className="text-[10px] text-text-secondary">{item.desc}</p>
-              </div>
-              <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md ${
-                item.active
-                  ? 'bg-[#34c77b]/10 text-[#34c77b]'
-                  : 'bg-white/5 text-text-secondary/50'
-              }`}>
-                {item.active ? 'ON' : 'OFF'}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </motion.div>
 
         {/* CTA buttons */}
