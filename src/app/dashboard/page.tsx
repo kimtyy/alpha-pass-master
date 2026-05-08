@@ -2,121 +2,190 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, ArrowRight } from 'lucide-react';
+import { Search, ArrowRight, ChevronRight } from 'lucide-react';
 import { EXAM_DATA } from '@/data/exams';
 import Link from 'next/link';
 
-export default function CertificationHub() {
+const CATEGORY_LABEL: Record<string, string> = {
+  Engineer: '기사',
+  Craftsman: '기능사',
+  Professional: '전문자격',
+};
+
+const CATEGORY_COLOR: Record<string, string> = {
+  Engineer: 'text-primary bg-primary/10 border-primary/20',
+  Craftsman: 'text-[#34c77b] bg-[#34c77b]/10 border-[#34c77b]/20',
+  Professional: 'text-[#888899] bg-white/5 border-white/10',
+};
+
+export default function DashboardPage() {
   const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const subjects = useMemo(() => Object.values(EXAM_DATA), []);
 
-  const filteredSubjects = useMemo(() => {
-    if (!search.trim()) return [];
-    return subjects
-      .filter(sub =>
-        sub.title.toLowerCase().includes(search.toLowerCase()) ||
-        sub.category.toLowerCase().includes(search.toLowerCase()) ||
-        sub.id.toLowerCase().includes(search.toLowerCase())
-      )
-      .slice(0, 5);
-  }, [search, subjects]);
+  const filtered = useMemo(() => {
+    let list = subjects;
+    if (activeCategory) list = list.filter((s) => s.category === activeCategory);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          s.category.toLowerCase().includes(q) ||
+          s.id.toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [subjects, search, activeCategory]);
+
+  const categories = ['Engineer', 'Craftsman', 'Professional'];
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground selection:bg-primary/20 flex flex-col items-center justify-center overflow-hidden font-sans">
-
-      {/* Heritage footer */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 opacity-20 pointer-events-none select-none">
-        <p className="text-[10px] font-black uppercase tracking-[0.6em] text-text-secondary">
-          Inspired by UniBook 1998
-        </p>
+    <div className="min-h-[100dvh] bg-background text-foreground font-sans">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[160px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-[#34c77b]/3 blur-[130px] rounded-full" />
       </div>
 
-      <div className="w-full max-w-4xl px-6 md:px-8 relative z-10 flex flex-col items-center">
+      <div className="w-full max-w-2xl mx-auto px-5 pt-16 pb-40">
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex flex-col items-center mb-12"
+          transition={{ duration: 0.6 }}
+          className="mb-10"
         >
-          <h1 className="text-3xl md:text-5xl font-black tracking-[0.25em] bg-gradient-to-b from-foreground via-foreground to-foreground/20 bg-clip-text text-transparent uppercase leading-tight mb-3">
+          <h1 className="text-3xl font-black tracking-[0.2em] bg-gradient-to-b from-foreground to-foreground/30 bg-clip-text text-transparent uppercase mb-1">
             ALPHA PASS
           </h1>
-          <div className="flex items-center gap-2 opacity-40">
-            <Sparkles size={11} className="text-primary" />
-            <p className="text-[10px] font-bold text-text-secondary uppercase tracking-[0.4em]">
-              Shared Growth Intelligence
-            </p>
-          </div>
+          <p className="text-[10px] font-bold text-text-secondary uppercase tracking-[0.35em]">
+            자격증 합격 인텔리전스
+          </p>
         </motion.div>
 
         {/* Search */}
-        <div className="relative max-w-2xl mx-auto group w-full">
-          {/* Ambient glow */}
-          <div className="absolute -inset-4 bg-primary/8 blur-[80px] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="relative mb-6 group"
+        >
+          <Search
+            size={16}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-primary transition-colors duration-200"
+          />
+          <input
+            type="search"
+            placeholder="자격증 검색..."
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-surface border border-white/8 rounded-[14px] py-3.5 pl-11 pr-4 text-sm text-foreground placeholder:text-text-secondary focus:outline-none focus:border-primary/40 focus:bg-surface-2 transition-all"
+          />
+        </motion.div>
 
-          <div className="relative flex items-center">
-            <Search
-              className="absolute left-6 md:left-8 text-foreground/10 group-focus-within:text-primary/60 transition-colors duration-300"
-              size={22}
-            />
-            <input
-              type="search"
-              autoFocus
-              placeholder="어떤 성공을 꿈꾸십니까?"
-              className="w-full bg-transparent border-b-2 border-foreground/6 py-6 md:py-8 px-14 md:px-16 text-xl md:text-3xl font-medium focus:outline-none focus:border-primary/40 transition-all placeholder:text-foreground/8 tracking-tighter text-center"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+        {/* Category filter */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="flex gap-2 mb-8 flex-wrap"
+        >
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`px-4 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+              !activeCategory
+                ? 'bg-primary text-black border-primary'
+                : 'bg-surface border-white/8 text-text-secondary hover:text-foreground'
+            }`}
+          >
+            전체
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              className={`px-4 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+                activeCategory === cat
+                  ? 'bg-primary/15 text-primary border-primary/30'
+                  : 'bg-surface border-white/8 text-text-secondary hover:text-foreground'
+              }`}
+            >
+              {CATEGORY_LABEL[cat]}
+            </button>
+          ))}
+        </motion.div>
 
-          {/* Dropdown */}
-          <AnimatePresence>
-            {filteredSubjects.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 right-0 mt-4 premium-glass rounded-[28px] overflow-hidden z-50 p-2"
-              >
-                {filteredSubjects.map((sub, idx) => (
+        {/* Certificate cards */}
+        <AnimatePresence mode="popLayout">
+          {filtered.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-16 text-text-secondary"
+            >
+              <p className="text-sm font-bold">검색 결과가 없습니다</p>
+              <p className="text-[11px] mt-1 opacity-60">다른 키워드로 검색해보세요</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="list"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-2"
+            >
+              {filtered.map((sub, idx) => (
+                <motion.div
+                  key={sub.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: idx * 0.04 }}
+                >
                   <Link
-                    key={sub.id}
                     href={`/study?id=${sub.id}`}
-                    className="flex items-center justify-between p-4 md:p-5 rounded-2xl hover:bg-primary/8 transition-all group/item"
+                    className="flex items-center justify-between p-4 bg-surface border border-white/8 rounded-[14px] hover:bg-surface-2 hover:border-primary/25 transition-all group"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-surface-2 flex items-center justify-center text-[10px] font-black text-text-secondary group-hover/item:bg-primary/15 group-hover/item:text-primary transition-colors shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-surface-2 border border-white/8 flex items-center justify-center text-[11px] font-black text-text-secondary group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all shrink-0">
                         {idx + 1}
                       </div>
-                      <div className="text-left">
-                        <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors">
+                      <div>
+                        <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
                           {sub.title}
                         </p>
-                        <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">
-                          {sub.category}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wide ${CATEGORY_COLOR[sub.category]}`}>
+                            {CATEGORY_LABEL[sub.category]}
+                          </span>
+                          <span className="text-[10px] text-text-secondary">
+                            {sub.questions.length}문항
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <ArrowRight
+                    <ChevronRight
                       size={16}
-                      className="text-text-secondary/50 group-hover/item:text-primary group-hover/item:translate-x-1 transition-all shrink-0"
+                      className="text-text-secondary/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0"
                     />
                   </Link>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Background ambience — amber 계열로 교체 */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-[15%] right-[-15%] w-[55%] h-[55%] bg-primary/6 blur-[160px] rounded-full" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[45%] h-[45%] bg-secondary/4 blur-[130px] rounded-full" />
+      {/* Footer */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-none select-none opacity-15">
+        <p className="text-[9px] font-black uppercase tracking-[0.6em] text-text-secondary whitespace-nowrap">
+          Inspired by UniBook 1998
+        </p>
       </div>
     </div>
   );

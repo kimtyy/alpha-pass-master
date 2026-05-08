@@ -3,120 +3,148 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/hooks/useUser';
-import { User, LogIn, LogOut, ShieldCheck, Zap, Mail, ChevronRight, Star, Award, ArrowRight } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Zap, BookOpen, ArrowRight } from 'lucide-react';
 
 export default function AccountPage() {
   const { status, login, logout, subscribe, isGuest, isMember, isPremium } = useUser();
 
+  const statusLabel = isGuest ? 'Guest' : isMember && !isPremium ? 'Member' : 'Premium';
+
   return (
-    <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center pt-24 pb-40 relative overflow-hidden">
-      {/* Background Decor */}
+    <div className="min-h-[100dvh] bg-background text-foreground font-sans">
+      {/* Background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 right-0 w-full h-1/2 bg-primary/5 blur-[120px] rounded-full" />
+        <div className="absolute top-0 right-[-10%] w-[55%] h-[50%] bg-primary/5 blur-[160px] rounded-full" />
       </div>
 
-      <header className="pt-20 pb-10 px-6 text-center shrink-0">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-2xl relative"
-        >
-          <User size={48} className="text-white" />
-          <div className="absolute inset-0 blur-3xl bg-primary rounded-full opacity-20 animate-pulse" />
-        </motion.div>
-        
-        <motion.h1 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="text-3xl font-black tracking-tighter mb-2"
-        >
-          {status === 'guest' ? 'Alpha Guest' : status === 'member' ? 'Alpha Member' : 'Alpha Premium'}
-        </motion.h1>
-        <p className="text-gray-500 text-[9px] font-black uppercase tracking-[0.4em]">
-          Join the Elite Family
-        </p>
-      </header>
+      <div className="w-full max-w-md mx-auto px-5 pt-16 pb-40">
 
-      <main className="w-full max-w-lg px-6 pb-40">
-        {/* Membership Card */}
-        <section className="bg-[#12121a]/60 border border-white/5 rounded-[40px] p-8 backdrop-blur-3xl relative overflow-hidden group mb-8">
-          <div className="absolute top-0 right-0 p-6">
-            <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${
-              isGuest ? 'bg-white/10 text-white' : 'bg-primary text-white'
+        {/* Avatar + Status */}
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center mb-10 pt-8"
+        >
+          <div className="relative mb-5">
+            <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-primary to-primary/40 flex items-center justify-center shadow-lg shadow-primary/20">
+              <User size={36} className="text-black" />
+            </div>
+            <span className={`absolute -bottom-2 -right-2 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wide ${
+              isGuest
+                ? 'bg-surface-2 border border-white/8 text-text-secondary'
+                : 'bg-primary text-black'
             }`}>
-              {status}
-            </div>
+              {statusLabel}
+            </span>
           </div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground mb-0.5">
+            {isGuest ? '게스트 모드' : 'Alpha Member'}
+          </h1>
+          <p className="text-[10px] font-bold text-text-secondary uppercase tracking-[0.35em]">
+            {isGuest ? 'Join the Elite Family' : 'Intelligence Ecosystem Active'}
+          </p>
+        </motion.div>
 
-          <div className="space-y-6 mb-10">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-primary">
-                <ShieldCheck size={20} />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-200">AI Diagnostic Core</h4>
-                <p className="text-[10px] text-gray-500">{isGuest ? 'Gated' : 'Active'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-accent">
-                <Zap size={20} />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-gray-200">Continuous Mastery</h4>
-                <p className="text-[10px] text-gray-500">{isPremium ? 'Active' : 'Gated'}</p>
-              </div>
-            </div>
-          </div>
-
-          {!isPremium && (
-            <button 
-              onClick={subscribe}
-              className="w-full py-4 rounded-2xl bg-accent text-black font-black text-sm flex items-center justify-center gap-2 hover:bg-white transition-all active:scale-95 shadow-xl shadow-accent/20"
+        {/* Feature list */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-surface border border-white/8 rounded-[14px] p-1 mb-4"
+        >
+          {[
+            {
+              icon: ShieldCheck,
+              label: 'AI 진단 리포트',
+              desc: '시험 후 약점 분석',
+              active: !isGuest,
+              color: 'text-primary',
+              bg: 'bg-primary/10',
+            },
+            {
+              icon: BookOpen,
+              label: '학습 기록',
+              desc: '합격 데이터 영구 저장',
+              active: isMember || isPremium,
+              color: 'text-[#34c77b]',
+              bg: 'bg-[#34c77b]/10',
+            },
+            {
+              icon: Zap,
+              label: '프리미엄 분석',
+              desc: '과목별 마스터리 차트',
+              active: isPremium,
+              color: 'text-primary',
+              bg: 'bg-primary/10',
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-[10px]"
             >
-              <Zap size={16} className="fill-current" />
-              프리미엄 멤버십 업그레이드
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${item.bg}`}>
+                <item.icon size={18} className={item.color} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground leading-none mb-0.5">{item.label}</p>
+                <p className="text-[10px] text-text-secondary">{item.desc}</p>
+              </div>
+              <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md ${
+                item.active
+                  ? 'bg-[#34c77b]/10 text-[#34c77b]'
+                  : 'bg-white/5 text-text-secondary/50'
+              }`}>
+                {item.active ? 'ON' : 'OFF'}
+              </span>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* CTA buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="space-y-3"
+        >
+          {isGuest && (
+            <button
+              onClick={login}
+              className="w-full py-4 rounded-[14px] bg-primary text-black font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-primary/20"
+            >
+              <ArrowRight size={18} />
+              Google로 1초 로그인
             </button>
           )}
-        </section>
 
-        {isGuest && (
-          <button 
-            onClick={login}
-            className="w-full py-5 rounded-3xl bg-white text-black font-black text-base flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all active:scale-95 group shadow-2xl"
-          >
-            <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            1초 회원가입 / 로그인
-          </button>
-        )}
-
-        {!isGuest && (
-          <div className="pt-8 text-center">
-            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mb-4">You are now part of the intelligence ecosystem.</p>
-            <button 
-              onClick={logout}
-              className="w-full py-5 rounded-[28px] bg-white/5 border border-white/10 text-gray-400 font-black text-base flex items-center justify-center gap-3 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
+          {!isGuest && !isPremium && (
+            <button
+              onClick={subscribe}
+              className="w-full py-4 rounded-[14px] bg-primary text-black font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-primary/20"
             >
-              <LogOut size={20} />
+              <Zap size={18} className="fill-current" />
+              프리미엄 업그레이드
+            </button>
+          )}
+
+          {!isGuest && (
+            <button
+              onClick={logout}
+              className="w-full py-4 rounded-[14px] bg-surface border border-white/8 text-text-secondary font-bold text-sm flex items-center justify-center gap-2 hover:border-[#f05050]/30 hover:text-[#f05050] active:scale-95 transition-all"
+            >
+              <LogOut size={16} />
               로그아웃
             </button>
+          )}
+        </motion.div>
 
-            <div className="pt-8 text-center">
-              <p className="text-[10px] text-gray-600 font-medium">관리자의 도움이 필요하신가요?</p>
-              <button className="text-[10px] text-primary font-bold underline mt-1">support@alphapass.master</button>
-            </div>
-          </div>
+        {!isGuest && (
+          <p className="text-center text-[10px] text-text-secondary/50 mt-8 font-medium">
+            support@alphapass.master
+          </p>
         )}
-      </main>
-
-      {/* Decorative Accents */}
-      {isPremium && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[50%] bg-accent/5 blur-[150px] -z-20 rotate-12"
-        />
-      )}
+      </div>
     </div>
   );
 }
