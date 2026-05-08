@@ -40,6 +40,8 @@ async function fetchQuestions(
     throw new Error(`자격증을 찾을 수 없습니다: ${certificateSlug}`);
   }
 
+  const certRow = cert as { id: string; name: string; category: string };
+
   // 2. 문제 + 보기 + 과목명 조회
   const { data: rows, error: qError } = await supabase
     .from('questions')
@@ -53,7 +55,7 @@ async function fetchQuestions(
       exam_subjects ( name ),
       options ( order_index, content )
     `)
-    .eq('certificate_id', cert.id)
+    .eq('certificate_id', certRow.id)
     .order('created_at');
 
   if (qError || !rows) {
@@ -77,7 +79,7 @@ async function fetchQuestions(
         : undefined,
   }));
 
-  return { questions, title: cert.name, category: cert.category };
+  return { questions, title: certRow.name, category: certRow.category };
 }
 
 // ── 메인 컴포넌트 ────────────────────────────────────────────

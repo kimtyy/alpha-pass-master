@@ -1,19 +1,28 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #000000;
-  --color-foreground: #ffffff;
-  --color-primary: #6366f1;
-  --color-secondary: #8b5cf6;
-  --color-accent: #10b981;
+  --color-background:     #0c0c15;
+  --color-foreground:     #e8e8f0;
+  --color-primary:        #f0a020;
+  --color-secondary:      #fbbf24;
+  --color-accent:         #34c77b;
+  --color-surface:        #14141f;
+  --color-surface-2:      #1c1c2b;
+  --color-text-secondary: #888899;
+  --color-danger:         #f05050;
 }
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --primary: #6366f1;
-  --primary-rgb: 99, 102, 241;
-  --secondary: #8b5cf6;
+  --background:     #0c0c15;
+  --foreground:     #e8e8f0;
+  --primary:        #f0a020;
+  --primary-rgb:    240, 160, 32;
+  --secondary:      #fbbf24;
+  --surface:        #14141f;
+  --surface-2:      #1c1c2b;
+  --text-secondary: #888899;
+  --success:        #34c77b;
+  --danger:         #f05050;
 }
 
 body {
@@ -23,18 +32,32 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glassmorphism Utilities */
+/* ── Glassmorphism ─────────────────────────────────────────── */
 .glass {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .premium-glass {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(240, 160, 32, 0.05),
+    rgba(251, 191, 36, 0.03)
+  );
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(240, 160, 32, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* ── Surface helpers ───────────────────────────────────────── */
+.surface   { background-color: var(--surface); }
+.surface-2 { background-color: var(--surface-2); }
+
+/* ── Amber glow (재사용 유틸리티) ──────────────────────────── */
+.glow-primary {
+  box-shadow: 0 0 40px rgba(240, 160, 32, 0.15),
+              0 0 80px rgba(240, 160, 32, 0.06);
 }

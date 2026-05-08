@@ -87,11 +87,13 @@ export const StudyStorage = {
 
       if (!cert) return null;
 
-      const { data: session, error } = await supabase
+      const certRow = cert as { id: string };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: session, error } = await (supabase as any)
         .from('study_sessions')
         .insert({
           user_id: user.id,
-          certificate_id: cert.id,
+          certificate_id: certRow.id,
           mode: record.mode,
           score: record.score,
           total: record.totalQuestions,
@@ -110,11 +112,10 @@ export const StudyStorage = {
 
       // 개별 답변 저장 (트리거가 wrong_answers 자동 처리)
       if (answers.length > 0) {
-        const { error: answerError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: answerError } = await (supabase as any)
           .from('session_answers')
-          .insert(
-            answers.map((a) => ({ ...a, session_id: session.id })),
-          );
+          .insert(answers.map((a) => ({ ...a, session_id: session.id })));
         if (answerError) console.error('saveAnswers error:', answerError);
       }
 

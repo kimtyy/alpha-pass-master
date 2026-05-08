@@ -71,15 +71,17 @@ export async function saveStudySession(
   session: InsertStudySession,
   answers: Omit<InsertSessionAnswer, 'session_id'>[],
 ) {
-  const { data: sessionData, error: sessionError } = await db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: sessionData, error: sessionError } = await (db as any)
     .from('study_sessions')
     .insert(session)
     .select('id')
     .single()
   if (sessionError) throw sessionError
 
-  const sessionId = sessionData.id
-  const { error: answersError } = await db
+  const sessionId = (sessionData as { id: string }).id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: answersError } = await (db as any)
     .from('session_answers')
     .insert(answers.map((a) => ({ ...a, session_id: sessionId })))
   if (answersError) throw answersError
@@ -141,7 +143,8 @@ export async function resolveWrongAnswer(
   userId: string,
   questionId: string,
 ) {
-  const { error } = await db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (db as any)
     .from('wrong_answers')
     .update({ is_resolved: true })
     .eq('user_id', userId)
@@ -156,7 +159,8 @@ export async function updateWrongAnswerMemo(
   questionId: string,
   memo: string,
 ) {
-  const { error } = await db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (db as any)
     .from('wrong_answers')
     .update({ memo })
     .eq('user_id', userId)
@@ -172,7 +176,8 @@ export async function getSubjectMastery(
   userId: string,
   certificateSlug: string,
 ) {
-  const { data, error } = await db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (db as any)
     .from('study_sessions')
     .select('subject_mastery, created_at, certificates!inner(slug)')
     .eq('user_id', userId)
@@ -181,10 +186,11 @@ export async function getSubjectMastery(
     .limit(5)
   if (error) throw error
 
-  if (!data.length) return null
+  const rows = data as Array<{ subject_mastery: Record<string, number> | null }>
+  if (!rows.length) return null
 
   const merged: Record<string, number[]> = {}
-  data.forEach((s) => {
+  rows.forEach((s) => {
     if (!s.subject_mastery) return
     Object.entries(s.subject_mastery).forEach(([subject, score]) => {
       merged[subject] = [...(merged[subject] ?? []), score as number]
